@@ -1,0 +1,8 @@
+{
+  "name": "K-Study Vietnam Backoffice",
+  "description": "베트남 현지 서비스 관리를 위한 통합 관리자 플랫폼",
+  "requestFramePermissions": [
+    "camera",
+    "microphone"
+  ]
+}
