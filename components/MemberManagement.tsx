@@ -517,7 +517,7 @@ const MemberManagement: React.FC<MemberManagementProps> = ({ mode }) => {
       width: 'w-24'
     },
     {
-      header: '현재 레벨',
+      header: '현재 단계',
       accessor: (u: User) => (
         <span className="text-sm text-gray-700">{u.currentLevel || '-'}</span>
       ),
