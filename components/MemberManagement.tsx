@@ -82,50 +82,75 @@ const MemberDetailModal = ({ user, onClose }: { user: User; onClose: () => void 
 
             {/* TAB: BASIC INFO */}
             {activeTab === 'BASIC' && (
-              <div className="bg-white p-6 rounded-2xl border border-slate-200/60 shadow-sm animate-in fade-in slide-in-from-bottom-2 duration-300">
-                <h4 className="text-xs font-bold text-slate-400 mb-6 uppercase flex items-center tracking-wider">
-                  <span className="w-2 h-2 bg-indigo-500 rounded-full mr-2"></span>기본 정보
-                </h4>
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-y-6 gap-x-8">
-                  <div>
-                    <label className="block text-xs font-medium text-slate-400 mb-1">닉네임</label>
-                    <div className="font-bold text-slate-800 text-base">{user.nickname}</div>
-                  </div>
-                  <div>
-                    <label className="block text-xs font-medium text-slate-400 mb-1">회원 계정</label>
-                    <div className="font-bold text-slate-800 text-base truncate" title={user.email}>{user.email}</div>
-                  </div>
-                  <div>
-                    <label className="block text-xs font-medium text-slate-400 mb-1">소속 단체</label>
-                    <div className="font-bold text-slate-800 text-base">{user.groupName || '-'}</div>
-                  </div>
-                  <div>
-                    <label className="block text-xs font-medium text-slate-400 mb-1">담당 교사</label>
-                    <div className="font-bold text-slate-800 text-base">{teacherName}</div>
-                  </div>
-                  <div>
-                    <label className="block text-xs font-medium text-slate-400 mb-1">회원 구분</label>
-                    <div className="font-bold text-slate-800 text-base">
-                      {user.type === 'FREE' ? '무료' : user.type === 'PAID_INDIVIDUAL' ? '개인유료' : '단체유료'}
+              <>
+                <div className="bg-white p-6 rounded-2xl border border-slate-200/60 shadow-sm animate-in fade-in slide-in-from-bottom-2 duration-300">
+                  <h4 className="text-xs font-bold text-slate-400 mb-6 uppercase flex items-center tracking-wider">
+                    <span className="w-2 h-2 bg-indigo-500 rounded-full mr-2"></span>기본 정보
+                  </h4>
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-y-6 gap-x-8">
+                    <div>
+                      <label className="block text-xs font-medium text-slate-400 mb-1">닉네임</label>
+                      <div className="font-bold text-slate-800 text-base">{user.nickname}</div>
                     </div>
-                  </div>
-                  <div>
-                    <label className="block text-xs font-medium text-slate-400 mb-1">상태</label>
-                    <div className={`font-bold text-base inline-flex items-center ${user.status === 'ACTIVE' ? 'text-emerald-600' : 'text-rose-500'}`}>
-                      {user.status === 'ACTIVE' && <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 mr-1.5"></div>}
-                      {user.status === 'ACTIVE' ? '회원' : user.status === 'WITHDRAWN' ? '탈퇴' : '휴면'}
+                    <div>
+                      <label className="block text-xs font-medium text-slate-400 mb-1">회원 계정</label>
+                      <div className="font-bold text-slate-800 text-base truncate" title={user.email}>{user.email}</div>
                     </div>
-                  </div>
-                  <div>
-                    <label className="block text-xs font-medium text-slate-400 mb-1">가입일</label>
-                    <div className="font-bold text-slate-800 text-base">{user.joinedAt}</div>
-                  </div>
-                  <div>
-                    <label className="block text-xs font-medium text-slate-400 mb-1">최근 접속</label>
-                    <div className="font-bold text-slate-800 text-base">{user.lastLoginAt}</div>
+                    <div>
+                      <label className="block text-xs font-medium text-slate-400 mb-1">소속 단체</label>
+                      <div className="font-bold text-slate-800 text-base">{user.groupName || '-'}</div>
+                    </div>
+                    <div>
+                      <label className="block text-xs font-medium text-slate-400 mb-1">담당 교사</label>
+                      <div className="font-bold text-slate-800 text-base">{teacherName}</div>
+                    </div>
+                    <div>
+                      <label className="block text-xs font-medium text-slate-400 mb-1">회원 구분</label>
+                      <div className="font-bold text-slate-800 text-base">
+                        {user.type === 'FREE' ? '무료' : user.type === 'PAID_INDIVIDUAL' ? '개인유료' : '단체유료'}
+                      </div>
+                    </div>
+                    <div>
+                      <label className="block text-xs font-medium text-slate-400 mb-1">상태</label>
+                      <div className={`font-bold text-base inline-flex items-center ${user.status === 'ACTIVE' ? 'text-emerald-600' : 'text-rose-500'}`}>
+                        {user.status === 'ACTIVE' && <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 mr-1.5"></div>}
+                        {user.status === 'ACTIVE' ? '회원' : user.status === 'WITHDRAWN' ? '탈퇴' : '휴면'}
+                      </div>
+                    </div>
+                    <div>
+                      <label className="block text-xs font-medium text-slate-400 mb-1">가입일</label>
+                      <div className="font-bold text-slate-800 text-base">{user.joinedAt}</div>
+                    </div>
+                    <div>
+                      <label className="block text-xs font-medium text-slate-400 mb-1">최근 접속</label>
+                      <div className="font-bold text-slate-800 text-base">{user.lastLoginAt}</div>
+                    </div>
                   </div>
                 </div>
-              </div>
+
+                {/* TAB: AUTH INFO (For Group Members) */}
+                {user.type === 'PAID_GROUP' && (
+                  <div className="mt-6 bg-white p-6 rounded-2xl border border-slate-200/60 shadow-sm animate-in fade-in slide-in-from-bottom-2 duration-300">
+                    <h4 className="text-xs font-bold text-slate-400 mb-6 uppercase flex items-center tracking-wider">
+                      <span className="w-2 h-2 bg-emerald-500 rounded-full mr-2"></span>단체 인증 정보
+                    </h4>
+                    <div className="grid grid-cols-2 md:grid-cols-3 gap-y-6 gap-x-8">
+                      <div>
+                        <label className="block text-xs font-medium text-slate-400 mb-1">인증 성명</label>
+                        <div className="font-bold text-slate-800 text-base">{user.authName || '-'}</div>
+                      </div>
+                      <div>
+                        <label className="block text-xs font-medium text-slate-400 mb-1">인증 이메일</label>
+                        <div className="font-bold text-slate-800 text-base">{user.authEmail || '-'}</div>
+                      </div>
+                      <div>
+                        <label className="block text-xs font-medium text-slate-400 mb-1">사용된 단체 코드</label>
+                        <div className="font-bold text-amber-600 text-base">{user.authGroupCode || '-'}</div>
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </>
             )}
 
             {/* TAB: LEARNING STATUS */}
@@ -336,7 +361,7 @@ const MemberDetailModal = ({ user, onClose }: { user: User; onClose: () => void 
           </div>
         )}
       </div>
-    </div>
+    </div >
   );
 };
 

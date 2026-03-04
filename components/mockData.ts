@@ -1,5 +1,5 @@
 
-import { User, Teacher, UserStatus, LoginMethod, UserType, RewardHistory, Program, Course, Unit, Lesson, ActivityCategory, TemplateConfig } from '../types';
+import { User, Teacher, UserStatus, LoginMethod, UserType, RewardHistory, Program, Course, Unit, Lesson, ActivityCategory, TemplateConfig, Group, GroupCode, GroupAuthPreReg } from '../types';
 
 // ==========================================
 // Learning Mock Data (Centralized)
@@ -71,10 +71,63 @@ export const MOCK_TEMPLATES: import('../types').Template[] = [
 // ==========================================
 // 1. Level 1: Organizations (Groups)
 // ==========================================
-export const MOCK_ORGANIZATIONS = [
-    { id: 'org-1', name: '안장 대학교', assignedProgramIds: ['1', '2'], defaultProgramId: '2' },
-    { id: 'org-2', name: '삼성전자 베트남', assignedProgramIds: ['2'], defaultProgramId: '1' },
-    { id: 'org-3', name: '세종학당', assignedProgramIds: ['1'], defaultProgramId: '1' },
+export const MOCK_ORGANIZATIONS: Group[] = [
+    {
+        id: 'org-1',
+        name: '안장 대학교',
+        type: 'SCHOOL',
+        representative: '안장 총장',
+        adminEmail: 'admin@anjange.edu',
+        memberCount: 15,
+        maxMembers: 100,
+        contractStart: '2024-01-01',
+        contractEnd: '2025-12-31',
+        status: 'ACTIVE',
+        createdAt: '2024-01-01',
+        assignedProgramIds: ['1', '2'],
+        defaultProgramId: '2',
+        groupCodes: [
+            { id: 'gc-1', groupId: 'org-1', code: 'ANJANG2024', assignedLevels: ['입문', '초급 1'], startDate: '2024-01-01', endDate: '2024-12-31', status: 'ACTIVE', createdAt: '2024-01-01' },
+            { id: 'gc-2', groupId: 'org-1', code: 'ANJANG_LEVEL2', assignedLevels: ['초급 2'], startDate: '2024-06-01', endDate: '2024-12-31', status: 'ACTIVE', createdAt: '2024-06-01' }
+        ],
+        authPreRegs: [
+            { id: 'pr-1', groupId: 'org-1', groupCode: 'ANJANG2024', email: 'v.le@gmail.com', name: 'Le Van An', isUsed: true, usedAt: '2026-01-10', userId: '1' },
+            { id: 'pr-2', groupId: 'org-1', groupCode: 'ANJANG2024', email: 'student1@provider.com', name: 'Student One', isUsed: false }
+        ]
+    },
+    {
+        id: 'org-2',
+        name: '삼성전자 베트남',
+        type: 'COMPANY',
+        representative: '삼성 베트남 대표',
+        adminEmail: 'admin@samsung.vn',
+        memberCount: 8,
+        maxMembers: 200,
+        contractStart: '2024-02-01',
+        contractEnd: '2025-01-31',
+        status: 'ACTIVE',
+        createdAt: '2024-02-01',
+        assignedProgramIds: ['2'],
+        defaultProgramId: '1',
+        groupCodes: [
+            { id: 'gc-3', groupId: 'org-2', code: 'SAMSUNG_VN_PRO', assignedLevels: ['입문', '초급 1', '초급 2'], startDate: '2024-02-01', endDate: '2025-01-31', status: 'ACTIVE', createdAt: '2024-02-01' }
+        ]
+    },
+    {
+        id: 'org-3',
+        name: '세종학당',
+        type: 'PUBLIC',
+        representative: '세종 원장',
+        adminEmail: 'contact@sejong.vn',
+        memberCount: 22,
+        maxMembers: 50,
+        contractStart: '2024-01-01',
+        contractEnd: '2024-12-31',
+        status: 'ACTIVE',
+        createdAt: '2024-01-01',
+        assignedProgramIds: ['1'],
+        defaultProgramId: '1'
+    },
 ];
 
 // ==========================================
@@ -109,6 +162,10 @@ export const MOCK_USERS: User[] = [
         rewardFlame: 30,
         expiringLightning: 15, // 10% expiring
         expiringFlame: 5,
+        // 단체 인증 정보
+        authEmail: 'v.le@gmail.com',
+        authName: 'Le Van An',
+        authGroupCode: 'ANJANG2024',
         // New Fields for Learning Progress
         progressRate: 45,
         currentLevel: '초급 1',

@@ -7,7 +7,7 @@ export type UserStatus = 'ACTIVE' | 'DORMANT' | 'WITHDRAWN';
 export interface User {
   id: string;
   memberCode: string; // 회원코드(유니크)
-  email: string;      // 회원 계정
+  email: string;      // 회원 계정 (소셜 로그인용)
   loginMethod: LoginMethod; // 간편로그인 구분
   nickname: string;
   status: UserStatus;
@@ -24,7 +24,11 @@ export interface User {
   organizationId?: string | null; // 소속 단체 ID (Level 1)
   teacherId?: string | null;      // 담당 교사 ID (Level 2)
   rewardBalances?: Record<string, { amount: number; expiring: number; }>; // 동적 보상 잔액
-  // Learning Progress Fields
+  // 단체 유료 회원 전용 (인증 정보)
+  authEmail?: string;  // 단체 인증 시 입력한 이메일
+  authName?: string;   // 단체 인증 시 입력한 성명
+  authGroupCode?: string; // 사용된 단체 코드
+  // 학습 정보
   progressRate?: number;    // 학습 진도율 (0-100)
   currentLevel?: string;    // 현재 학습 레벨
   lastStudyDate?: string;   // 최근 학습일
@@ -135,6 +139,32 @@ export interface Group {
   createdAt: string;      // 등록일
   assignedProgramIds?: string[]; // 단체 배정 강좌 목록 (1:N)
   defaultProgramId?: string;     // 기본 배정 강좌 (Default)
+  groupCodes?: GroupCode[];      // 발행된 단체 코드 목록
+  authPreRegs?: GroupAuthPreReg[]; // 사전 등록된 인증 대상자 정보
+}
+
+export type GroupCodeStatus = 'ACTIVE' | 'EXPIRED' | 'INACTIVE';
+
+export interface GroupCode {
+  id: string;
+  groupId: string;
+  code: string;           // 유니크 단체 코드
+  assignedLevels: string[]; // 이용 가능 단계 (입문, 초급1, 초급2 등)
+  startDate: string;      // 유효 기간 시작
+  endDate: string;        // 유효 기간 종료
+  status: GroupCodeStatus;
+  createdAt: string;
+}
+
+export interface GroupAuthPreReg {
+  id: string;
+  groupId: string;
+  groupCode: string; // 사전 매칭될 단체 코드 (옵션일 수 있으나 기획상 포함)
+  email: string;     // 사전 등록 이메일
+  name: string;      // 사전 등록 성명
+  isUsed: boolean;   // 인증 완료 여부
+  usedAt?: string;   // 인증 일시
+  userId?: string;   // 인증한 회원 ID
 }
 
 export interface Teacher {
