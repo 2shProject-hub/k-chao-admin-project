@@ -336,6 +336,19 @@ export interface AdminAccount {
   role: AdminRoleType;    // Role-based Access Control
   referenceId?: string;   // Organization ID or Teacher ID for scoping
   permissions?: string[]; // List of Menu IDs allowed
+  passwordChanged: boolean; // 최초 로그인 후 비밀번호 변경 여부
+  accountStatus: 'ACTIVE' | 'INACTIVE'; // 계정 활성/비활성 상태
+}
+
+// 클래스(Class) 운영을 위한 스터디 그룹
+export interface StudyGroup {
+  id: string;
+  organizationId: string;
+  name: string;
+  teacherId: string; // 담당 교사 ID (AdminAccount.id)
+  studentIds: string[]; // 소속 회원 ID 목록 (최대 30명)
+  createdAt: string;
+  description?: string;
 }
 
 // ==========================================

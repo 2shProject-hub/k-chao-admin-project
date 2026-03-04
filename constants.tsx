@@ -20,6 +20,7 @@ export const NAVIGATION: MenuItem[] = [
   {
     id: 'assignment', label: '배정 관리', icon: 'UserCheck', children: [
       { id: 'assign-course', label: '강좌 배정', path: '/assignment/course' },
+      { id: 'assign-class', label: '클래스 관리', path: '/assignment/classes' },
       { id: 'assign-teacher', label: '교사 관리', path: '/learning/teachers' },
       { id: 'assign-student', label: '학생 관리(배정)', path: '/learning/students' },
     ]

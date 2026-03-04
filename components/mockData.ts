@@ -1,5 +1,5 @@
 
-import { User, Teacher, UserStatus, LoginMethod, UserType, RewardHistory, Program, Course, Unit, Lesson, ActivityCategory, TemplateConfig, Group, GroupCode, GroupAuthPreReg } from '../types';
+import { User, Teacher, UserStatus, LoginMethod, UserType, RewardHistory, Program, Course, Unit, Lesson, ActivityCategory, TemplateConfig, Group, GroupCode, GroupAuthPreReg, StudyGroup } from '../types';
 
 // ==========================================
 // Learning Mock Data (Centralized)
@@ -757,3 +757,26 @@ export const MOCK_TEMPLATE_REGISTRY: Record<string, TemplateConfig> = {
     },
 };
 
+// ==========================================
+// 12. Study Groups (Classes)
+// ==========================================
+export const MOCK_STUDY_GROUPS: StudyGroup[] = [
+    {
+        id: 'sg-1',
+        organizationId: 'org-1',
+        name: '안장대 한국어 기초 A반',
+        teacherId: 'teacher-1',
+        studentIds: ['1', '2'],
+        createdAt: '2024-03-01',
+        description: '오전 기초반'
+    },
+    {
+        id: 'sg-2',
+        organizationId: 'org-1',
+        name: '안장대 한국어 기초 B반',
+        teacherId: 'teacher-1',
+        studentIds: [],
+        createdAt: '2024-03-01',
+        description: '오후 기초반'
+    }
+];
