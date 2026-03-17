@@ -1,9 +1,10 @@
 
 import React, { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { ChevronDown, ChevronRight, LogOut, Menu, UserCircle, Bell, Globe } from 'lucide-react';
+import { ChevronDown, ChevronRight, LogOut, Menu, UserCircle, Bell, Globe, Info } from 'lucide-react';
 import { NAVIGATION, ICON_MAP } from '../constants';
 import { MenuItem } from '../types';
+import { PAGE_DESCRIPTIONS, useDescription } from './descriptions';
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -27,7 +28,11 @@ const Layout: React.FC<LayoutProps> = ({ children, onLogout }) => {
   const [isSidebarOpen, setSidebarOpen] = useState(true);
   const [expandedMenus, setExpandedMenus] = useState<string[]>(['members', 'learning', 'finance']);
   const [language, setLanguage] = useState<'ko' | 'vn'>('ko');
+  const [isDescriptionOpen, setIsDescriptionOpen] = useState(true);
   const location = useLocation();
+  const { modalDescriptionKey } = useDescription();
+
+  const currentDescription = PAGE_DESCRIPTIONS[modalDescriptionKey || location.pathname];
 
   const toggleMenu = (id: string) => {
     setExpandedMenus(prev =>
@@ -152,27 +157,50 @@ const Layout: React.FC<LayoutProps> = ({ children, onLogout }) => {
           </main>
         </div>
 
-        {/* Right Sidebar: Description (그램1.png 스타일 고도화) - 나중에 내용을 추가할 예정이므로 현재는 숨김 처리 */}
-        <aside className="hidden w-[320px] bg-[#165a72] text-white flex-col shrink-0 overflow-hidden border-l border-white/5 shadow-[-10px_0_40px_rgba(0,0,0,0.1)]">
-          <div className="p-8 border-b border-white/10 bg-[#124d61]">
-            <h2 className="text-2xl font-black tracking-tight mb-2">Description</h2>
-            <div className="w-10 h-1 bg-sky-400 rounded-full"></div>
-          </div>
+        {/* Global Floating button when description is hidden */}
+        {currentDescription && !isDescriptionOpen && (
+          <button 
+            onClick={() => setIsDescriptionOpen(true)}
+            className="hidden xl:flex fixed right-0 top-[15vh] bg-blue-600/90 backdrop-blur-sm text-white p-3 pr-4 rounded-l-2xl shadow-[-10px_0_20px_rgba(0,0,0,0.15)] hover:bg-blue-700 hover:pr-5 transition-all duration-300 z-[100] items-center group cursor-pointer"
+          >
+            <div className="flex flex-col items-center">
+              <Info size={22} className="group-hover:scale-110 group-hover:text-blue-200 transition-transform mb-2" />
+              <span className="text-[10px] font-black tracking-widest uppercase text-blue-100 group-hover:text-white transition-colors" style={{ writingMode: 'vertical-rl', textOrientation: 'upright' }}>
+                기능 설명 보기
+              </span>
+            </div>
+          </button>
+        )}
 
-          <div className="flex-1 overflow-y-auto p-8 custom-sidebar-scroll space-y-8">
-            <div className="py-20 flex flex-col items-center justify-center text-center opacity-40">
-              <div className="w-16 h-16 border-2 border-dashed border-sky-300/30 rounded-3xl mb-4 flex items-center justify-center">
-                <div className="w-2 h-2 bg-sky-400 rounded-full animate-pulse"></div>
+        {/* Global Description Panel (Option B style) */}
+        {currentDescription && (
+          <div 
+            className={`w-[380px] hidden xl:flex flex-col bg-[#F1F5F9] border-l border-slate-200 shadow-[-20px_0_40px_rgba(0,0,0,0.15)] h-screen fixed right-0 top-0 bottom-0 z-[100] overflow-hidden shrink-0 transition-transform duration-500 ease-[cubic-bezier(0.19,1,0.22,1)] ${isDescriptionOpen ? 'translate-x-0' : 'translate-x-full'}`}
+            style={{
+              backgroundImage: 'radial-gradient(#cbd5e1 1.5px, transparent 1.5px)',
+              backgroundSize: '24px 24px'
+            }}
+          >
+            <div className="p-6 bg-white/70 backdrop-blur-md border-b border-slate-200 flex-none relative z-10 shadow-sm">
+              <div className="flex justify-between items-center">
+                <h2 className="text-[17px] font-black text-slate-800 tracking-tight flex items-baseline">
+                  Description
+                </h2>
+                <button 
+                  onClick={() => setIsDescriptionOpen(false)}
+                  className="p-1.5 bg-slate-100 hover:bg-slate-200 rounded-lg text-slate-500 transition-colors border border-slate-200 shadow-sm"
+                >
+                  <ChevronRight size={18} className="translate-x-0.5" />
+                </button>
               </div>
-              <p className="text-xs font-bold tracking-widest uppercase">Content Waiting</p>
-              <p className="text-[10px] mt-2 text-sky-100/50">화면별 기능 상세 설명이<br />준비 중입니다.</p>
+              <div className="w-full h-px border-t border-dashed border-slate-400 mt-4"></div>
+            </div>
+
+            <div className="flex-1 overflow-y-auto p-7 space-y-8 relative z-10 custom-scrollbar">
+              {currentDescription}
             </div>
           </div>
-
-          <div className="p-6 bg-[#0e3f4f] text-[10px] text-sky-400/40 font-black tracking-[0.2em] uppercase border-t border-white/5">
-            Admin Management OS v1.2
-          </div>
-        </aside>
+        )}
       </div>
     </div>
   );

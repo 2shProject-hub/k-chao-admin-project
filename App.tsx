@@ -4,6 +4,7 @@ import { HashRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { ShieldAlert } from 'lucide-react';
 import AdminAccountManagement from './components/AdminAccountManagement';
 import Layout from './components/Layout';
+import { DescriptionProvider } from './components/descriptions';
 import Dashboard from './components/Dashboard';
 import MemberManagement from './components/MemberManagement';
 import GroupManagement from './components/GroupManagement';
@@ -19,6 +20,7 @@ import CouponManagement from './components/CouponManagement';
 import GiftCardManagement from './components/GiftCardManagement';
 import RewardStatus from './components/RewardStatus';
 import RewardManagement from './components/RewardManagement';
+import RewardPolicyManagement from './components/RewardPolicyManagement';
 import FAQManagement from './components/FAQManagement';
 import AppVersionManagement from './components/AppVersionManagement';
 import TermsManagement from './components/TermsManagement';
@@ -211,81 +213,84 @@ const App: React.FC = () => {
   if (!isAuthenticated) return <LoginPage onLogin={handleLogin} />;
 
   return (
-    <HashRouter>
-      <Layout onLogout={handleLogout}>
-        <Routes>
-          <Route path="/" element={<Dashboard />} />
+    <DescriptionProvider>
+      <HashRouter>
+        <Layout onLogout={handleLogout}>
+          <Routes>
+            <Route path="/" element={<Dashboard />} />
 
-          {/* 회원관리 */}
-          <Route path="/members/list" element={<MemberManagement mode="ACTIVE" />} />
-          <Route path="/members/withdrawn" element={<MemberManagement mode="WITHDRAWN" />} />
-          <Route path="/members/dormant" element={<MemberManagement mode="DORMANT" />} />
-          <Route path="/members/groups" element={<GroupManagement />} />
-          <Route path="/assignment/classes" element={<StudyGroupManagement />} />
-          <Route path="/assignment/course" element={<CourseAssignment />} />
-          <Route path="/learning/programs" element={<ProgramManagement />} />
-          <Route path="/learning/teachers" element={<TeacherManagement />} />
-          <Route path="/learning/students" element={<StudentAssignment />} />
-          <Route path="/learning/contents" element={<ContentManagement />} />
-          <Route path="/learning/templates" element={<TemplateManagement />} />
-          <Route path="/finance/settlement" element={<SettlementManagement />} />
-          <Route path="/finance/coupons" element={<CouponManagement />} />
-          <Route path="/finance/giftcards" element={<GiftCardManagement />} />
-          <Route path="/push" element={<PushManagement />} />
-          <Route path="/rewards/status" element={<RewardStatus />} />
-          <Route path="/rewards/manage" element={<RewardManagement />} />
-          <Route path="/boards/inquiries" element={<InquiryManagement />} />
-          <Route path="/boards/faq" element={<FAQManagement />} />
-          <Route path="/boards/terms" element={<TermsManagement />} />
+            {/* 회원관리 */}
+            <Route path="/members/list" element={<MemberManagement mode="ACTIVE" />} />
+            <Route path="/members/withdrawn" element={<MemberManagement mode="WITHDRAWN" />} />
+            <Route path="/members/dormant" element={<MemberManagement mode="DORMANT" />} />
+            <Route path="/members/groups" element={<GroupManagement />} />
+            <Route path="/assignment/classes" element={<StudyGroupManagement />} />
+            <Route path="/assignment/course" element={<CourseAssignment />} />
+            <Route path="/learning/programs" element={<ProgramManagement />} />
+            <Route path="/learning/teachers" element={<TeacherManagement />} />
+            <Route path="/learning/students" element={<StudentAssignment />} />
+            <Route path="/learning/contents" element={<ContentManagement />} />
+            <Route path="/learning/templates" element={<TemplateManagement />} />
+            <Route path="/finance/settlement" element={<SettlementManagement />} />
+            <Route path="/finance/coupons" element={<CouponManagement />} />
+            <Route path="/finance/giftcards" element={<GiftCardManagement />} />
+            <Route path="/push" element={<PushManagement />} />
+            <Route path="/rewards/status" element={<RewardStatus />} />
+            <Route path="/rewards/manage" element={<RewardManagement />} />
+            <Route path="/rewards/policy" element={<RewardPolicyManagement />} />
+            <Route path="/boards/inquiries" element={<InquiryManagement />} />
+            <Route path="/boards/faq" element={<FAQManagement />} />
+            <Route path="/boards/terms" element={<TermsManagement />} />
 
-          {/* System Management */}
-          <Route path="/system/admin-accounts" element={<AdminAccountManagement />} />
-          <Route path="/system/versions" element={<AppVersionManagement />} />
-          <Route path="/system/logs" element={<SystemLogManagement />} />
-          <Route path="/stats/subscriptions" element={<SubscriptionStats />} />
-          <Route path="/stats/users" element={<MemberStats />} />
-          <Route path="/system/permissions" element={<AdminPermissions />} />
-          <Route path="/personal/account" element={<AdminAccountSettings />} />
-          <Route path="*" element={<Navigate to="/" replace />} />
-        </Routes>
-      </Layout>
+            {/* System Management */}
+            <Route path="/system/admin-accounts" element={<AdminAccountManagement />} />
+            <Route path="/system/versions" element={<AppVersionManagement />} />
+            <Route path="/system/logs" element={<SystemLogManagement />} />
+            <Route path="/stats/subscriptions" element={<SubscriptionStats />} />
+            <Route path="/stats/users" element={<MemberStats />} />
+            <Route path="/system/permissions" element={<AdminPermissions />} />
+            <Route path="/personal/account" element={<AdminAccountSettings />} />
+            <Route path="*" element={<Navigate to="/" replace />} />
+          </Routes>
+        </Layout>
 
-      {mustChangePassword && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-900/80 backdrop-blur-md p-4 animate-in fade-in duration-500">
-          <div className="bg-white rounded-[2.5rem] shadow-2xl w-full max-w-md p-10 text-center relative overflow-hidden">
-            <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-amber-400 to-orange-500"></div>
-            <div className="w-20 h-20 bg-amber-50 rounded-3xl flex items-center justify-center mx-auto mb-6 transform rotate-3">
-              <ShieldAlert size={40} className="text-amber-500 -rotate-3" />
-            </div>
-            <h2 className="text-2xl font-black text-slate-800 tracking-tight mb-2">비밀번호 변경 필요</h2>
-            <p className="text-slate-500 font-medium mb-8">
-              보안 정책에 따라 <span className="font-bold text-slate-800">최초 로그인 시 비밀번호 변경</span>이 필수입니다. 현재 비밀번호를 변경해주세요.
-            </p>
-            <div className="space-y-4">
-              <input
-                type="password"
-                placeholder="새 비밀번호 입력"
-                className="w-full h-14 px-6 bg-slate-50 border-2 border-slate-100 rounded-2xl focus:border-blue-500 outline-none transition-all font-bold"
-              />
-              <input
-                type="password"
-                placeholder="새 비밀번호 확인"
-                className="w-full h-14 px-6 bg-slate-50 border-2 border-slate-100 rounded-2xl focus:border-blue-500 outline-none transition-all font-bold"
-              />
-              <button
-                onClick={() => {
-                  alert('비밀번호가 성공적으로 변경되었습니다. 이제 대시보드를 이용하실 수 있습니다.');
-                  setMustChangePassword(false);
-                }}
-                className="w-full py-5 bg-blue-600 text-white rounded-2xl font-black text-lg shadow-xl shadow-blue-100 hover:bg-blue-700 hover:-translate-y-1 transition-all"
-              >
-                비밀번호 변경 및 완료
-              </button>
+        {mustChangePassword && (
+          <div className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-900/80 backdrop-blur-md p-4 animate-in fade-in duration-500">
+            <div className="bg-white rounded-[2.5rem] shadow-2xl w-full max-w-md p-10 text-center relative overflow-hidden">
+              <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-amber-400 to-orange-500"></div>
+              <div className="w-20 h-20 bg-amber-50 rounded-3xl flex items-center justify-center mx-auto mb-6 transform rotate-3">
+                <ShieldAlert size={40} className="text-amber-500 -rotate-3" />
+              </div>
+              <h2 className="text-2xl font-black text-slate-800 tracking-tight mb-2">비밀번호 변경 필요</h2>
+              <p className="text-slate-500 font-medium mb-8">
+                보안 정책에 따라 <span className="font-bold text-slate-800">최초 로그인 시 비밀번호 변경</span>이 필수입니다. 현재 비밀번호를 변경해주세요.
+              </p>
+              <div className="space-y-4">
+                <input
+                  type="password"
+                  placeholder="새 비밀번호 입력"
+                  className="w-full h-14 px-6 bg-slate-50 border-2 border-slate-100 rounded-2xl focus:border-blue-500 outline-none transition-all font-bold"
+                />
+                <input
+                  type="password"
+                  placeholder="새 비밀번호 확인"
+                  className="w-full h-14 px-6 bg-slate-50 border-2 border-slate-100 rounded-2xl focus:border-blue-500 outline-none transition-all font-bold"
+                />
+                <button
+                  onClick={() => {
+                    alert('비밀번호가 성공적으로 변경되었습니다. 이제 대시보드를 이용하실 수 있습니다.');
+                    setMustChangePassword(false);
+                  }}
+                  className="w-full py-5 bg-blue-600 text-white rounded-2xl font-black text-lg shadow-xl shadow-blue-100 hover:bg-blue-700 hover:-translate-y-1 transition-all"
+                >
+                  비밀번호 변경 및 완료
+                </button>
+              </div>
             </div>
           </div>
-        </div>
-      )}
-    </HashRouter>
+        )}
+      </HashRouter>
+    </DescriptionProvider>
   );
 };
 

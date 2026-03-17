@@ -45,7 +45,7 @@ const MOCK_GROUPS: Group[] = [
         status: 'EXPIRED',
         createdAt: '2023-05-01'
     },
-    ...Array.from({ length: 15 }).map((_, i) => ({
+    ...Array.from({ length: 7 }).map((_, i) => ({
         id: `temp-${i}`,
         name: `Vietnam Tech High School ${i}`,
         type: (i % 3 === 0 ? 'SCHOOL' : 'COMPANY') as GroupType,

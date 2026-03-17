@@ -3,9 +3,10 @@ import React, { useState, useMemo } from 'react';
 import DataList from './DataList';
 import { User, UserType, LoginMethod, UserStatus, RewardHistory } from '../types';
 import { ICON_MAP } from '../constants';
-import { Chrome, Facebook, Apple, Calendar, X, ChevronLeft, ChevronRight, Zap, Flame, Volume2, Globe, FileText, Check } from 'lucide-react';
+import { Chrome, Facebook, Apple, Calendar, X, ChevronLeft, ChevronRight, Zap, Flame, Volume2, Globe, FileText, Check, PlusCircle, MinusCircle, AlertCircle } from 'lucide-react';
 import { MOCK_USERS, MOCK_TEACHERS, MOCK_ORGANIZATIONS, generateMockRewardHistory } from './mockData';
 import { getMockRewardTransactions, getMockLearningHistory, getMockLearningReport } from './mockDataHelpers';
+import { useDescription } from './descriptions';
 
 interface MemberManagementProps {
   mode: UserStatus;
@@ -19,10 +20,28 @@ const MemberDetailModal = ({ user, onClose }: { user: User; onClose: () => void 
   const itemsPerPage = 10;
   const [selectedReportId, setSelectedReportId] = useState<string | null>(null);
 
+  const { setModalDescriptionKey } = useDescription();
+
+  React.useEffect(() => {
+    if (selectedReportId) {
+      setModalDescriptionKey('modal:learning-report');
+    } else {
+      setModalDescriptionKey('modal:member-detail');
+    }
+    return () => setModalDescriptionKey(null);
+  }, [selectedReportId, setModalDescriptionKey]);
+
   // Memo handling
   const [adminMemo, setAdminMemo] = useState('');
   const [isMemoSaving, setIsMemoSaving] = useState(false);
   const [memoSaved, setMemoSaved] = useState(false);
+
+  // Manual Reward Adjustment
+  const [isAdjustModalOpen, setIsAdjustModalOpen] = useState(false);
+  const [adjustType, setAdjustType] = useState<'ADD' | 'DEDUCT'>('ADD');
+  const [adjustCategory, setAdjustCategory] = useState<'LIGHTNING' | 'FLAME'>('LIGHTNING');
+  const [adjustAmount, setAdjustAmount] = useState<number | ''>('');
+  const [adjustReason, setAdjustReason] = useState('');
 
   // Data
   const rewardTransactions = useMemo(() => getMockRewardTransactions(user.id), [user.id]);
@@ -311,10 +330,16 @@ const MemberDetailModal = ({ user, onClose }: { user: User; onClose: () => void 
 
                 {/* History Table */}
                 <div className="bg-white rounded-2xl border border-slate-200/60 shadow-sm overflow-hidden">
-                  <div className="p-6 border-b border-slate-100">
+                  <div className="p-6 border-b border-slate-100 flex justify-between items-center">
                     <h4 className="text-xs font-bold text-slate-400 uppercase flex items-center tracking-wider">
                       <span className="w-2 h-2 bg-indigo-500 rounded-full mr-2"></span>보상 내역 (획득/사용/소멸)
                     </h4>
+                    <button 
+                      onClick={() => setIsAdjustModalOpen(true)}
+                      className="text-xs font-bold text-slate-600 bg-slate-100 hover:bg-slate-200 px-3 py-1.5 rounded-lg transition-colors flex items-center"
+                    >
+                      <PlusCircle size={14} className="mr-1" />수동 지급/차감
+                    </button>
                   </div>
                   <table className="min-w-full divide-y divide-slate-100">
                     <thead className="bg-slate-50/50">
@@ -399,8 +424,8 @@ const MemberDetailModal = ({ user, onClose }: { user: User; onClose: () => void 
 
         {/* Detailed Learning Report Modal Overlay */}
         {selectedReportId && learningReport && ( // Use learningReport here
-          <div className="fixed inset-0 z-[60] flex items-center justify-center bg-slate-900/50 backdrop-blur-sm p-4 animate-in fade-in zoom-in duration-200">
-            <div className="bg-white rounded-2xl shadow-2xl w-full max-w-6xl h-[90vh] flex flex-col ring-1 ring-slate-900/5 overflow-hidden">
+          <div className="fixed inset-0 z-[60] flex items-center justify-center bg-slate-900/50 backdrop-blur-sm p-4 animate-in fade-in zoom-in duration-300">
+            <div className="bg-white rounded-2xl shadow-2xl w-full max-w-5xl h-[90vh] flex flex-col ring-1 ring-slate-900/5 overflow-hidden">
               {/* Report Header */}
               <div className="flex-none px-6 py-5 border-b border-slate-100 bg-slate-50 flex justify-between items-center">
                 <div>
@@ -600,7 +625,64 @@ const MemberDetailModal = ({ user, onClose }: { user: User; onClose: () => void 
           </div>
         )}
 
+        {/* Manual Reward Adjustment Modal Overlay */}
+        {isAdjustModalOpen && (
+          <div className="fixed inset-0 z-[70] flex items-center justify-center bg-slate-900/60 backdrop-blur-sm p-4 animate-in fade-in duration-200">
+            <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md flex flex-col ring-1 ring-slate-900/5 overflow-hidden">
+              <div className="px-6 py-5 border-b border-slate-100 bg-slate-50 flex justify-between items-center">
+                <h3 className="text-lg font-bold text-slate-800 tracking-tight">수동 보상 지급/차감</h3>
+                <button
+                  onClick={() => setIsAdjustModalOpen(false)}
+                  className="p-1.5 hover:bg-slate-200 rounded-full text-slate-400 transition-colors"
+                >
+                  <X size={20} />
+                </button>
+              </div>
+              <div className="p-6 flex-col space-y-6 bg-slate-50">
+                <div className="space-y-4">
+                  <div>
+                    <label className="block text-sm font-bold text-slate-700 mb-2">보상 종류</label>
+                    <div className="flex bg-white rounded-xl p-1 border border-slate-200 shadow-sm">
+                      <button onClick={() => setAdjustCategory('LIGHTNING')} className={`flex-1 flex items-center justify-center py-2 text-sm font-bold rounded-lg transition-colors ${adjustCategory === 'LIGHTNING' ? 'bg-amber-100 text-amber-700' : 'text-slate-400'}`}><Zap size={16} className="mr-1" /> 번개</button>
+                      <button onClick={() => setAdjustCategory('FLAME')} className={`flex-1 flex items-center justify-center py-2 text-sm font-bold rounded-lg transition-colors ${adjustCategory === 'FLAME' ? 'bg-orange-100 text-orange-700' : 'text-slate-400'}`}><Flame size={16} className="mr-1" /> 불꽃</button>
+                    </div>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-bold text-slate-700 mb-2">처리 구분</label>
+                    <div className="flex bg-white rounded-xl p-1 border border-slate-200 shadow-sm">
+                      <button onClick={() => setAdjustType('ADD')} className={`flex-1 flex items-center justify-center py-2 text-sm font-bold rounded-lg transition-colors ${adjustType === 'ADD' ? 'bg-emerald-100 text-emerald-700' : 'text-slate-400'}`}><PlusCircle size={16} className="mr-1" /> 지급 (+)</button>
+                      <button onClick={() => setAdjustType('DEDUCT')} className={`flex-1 flex items-center justify-center py-2 text-sm font-bold rounded-lg transition-colors ${adjustType === 'DEDUCT' ? 'bg-rose-100 text-rose-700' : 'text-slate-400'}`}><MinusCircle size={16} className="mr-1" /> 차감 (-)</button>
+                    </div>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-bold text-slate-700 mb-2">수량 (개)</label>
+                    <input type="number" value={adjustAmount} onChange={e => setAdjustAmount(parseInt(e.target.value) || '')} className="w-full bg-white border border-slate-200 p-3 rounded-xl focus:border-blue-500 font-bold outline-none ring-1 ring-transparent focus:ring-blue-100 transition-all text-slate-800" placeholder="수량을 입력하세요" />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-bold text-slate-700 mb-2">사유</label>
+                    <input type="text" value={adjustReason} onChange={e => setAdjustReason(e.target.value)} className="w-full bg-white border border-slate-200 p-3 rounded-xl focus:border-blue-500 text-sm font-medium outline-none ring-1 ring-transparent focus:ring-blue-100 transition-all text-slate-800" placeholder="예: 시스템 오류 보상" />
+                  </div>
+                </div>
+              </div>
+              <div className="px-6 py-4 bg-white border-t border-slate-100 flex space-x-3">
+                <button onClick={() => setIsAdjustModalOpen(false)} className="flex-1 py-3 bg-slate-100 text-slate-600 font-bold rounded-xl hover:bg-slate-200 transition-colors text-sm">취소</button>
+                <button 
+                  onClick={() => {
+                    alert('정상적으로 처리되었습니다.');
+                    setIsAdjustModalOpen(false);
+                    setAdjustAmount('');
+                    setAdjustReason('');
+                  }} 
+                  className={`flex-1 py-3 text-white font-bold rounded-xl shadow-lg transition-colors text-sm ${adjustType === 'ADD' ? 'bg-emerald-600 shadow-emerald-200 hover:bg-emerald-700' : 'bg-rose-600 shadow-rose-200 hover:bg-rose-700'}`}>
+                  확인 및 완료
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
       </div>
+
     </div>
   );
 };

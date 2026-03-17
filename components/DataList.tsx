@@ -41,7 +41,7 @@ const DataList = <T extends { id: string | number }>({
   actions // Destructure
 }: DataListProps<T>) => {
   const [currentPage, setCurrentPage] = React.useState(1);
-  const [rowsPerPage, setRowsPerPage] = React.useState(20);
+  const [rowsPerPage, setRowsPerPage] = React.useState(10);
 
   // Reset page when data length changes significantly or filter implies new search
   React.useEffect(() => {
@@ -89,6 +89,7 @@ const DataList = <T extends { id: string | number }>({
                 onChange={handleRowsPerPageChange}
                 className="border border-gray-300 rounded px-2 py-1 focus:outline-none"
               >
+                <option value={10}>10개</option>
                 <option value={20}>20개</option>
                 <option value={30}>30개</option>
                 <option value={50}>50개</option>

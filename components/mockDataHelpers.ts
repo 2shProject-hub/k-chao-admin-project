@@ -8,14 +8,29 @@ export const getMockRewardTransactions = (userId: string): import('../types').Re
         else if (rand > 0.9) type = 'EXPIRED';
 
         const category: 'LIGHTNING' | 'FLAME' = Math.random() > 0.5 ? 'LIGHTNING' : 'FLAME';
+        let amount = Math.floor(Math.random() * 50) + 10;
+        let description = '학습 완료 보상';
+        if (type === 'USED') {
+            const usedTypes = [
+                '상점 아이템 구매',
+                'AI 대화 시작 (주제: 교통수단)',
+                'Activity 학습 완료',
+                'AI 대화 프리토킹',
+                '게임 리트라이 비용'
+            ];
+            description = usedTypes[Math.floor(Math.random() * usedTypes.length)];
+            amount = Math.floor(Math.random() * 3) + 1; // 1~3 번개/불꽃 소모
+        } else if (type === 'EXPIRED') {
+            description = '유효기간 만료 소멸';
+        }
 
         return {
             id: `rt-${i}`,
             userId,
             type,
             category,
-            amount: Math.floor(Math.random() * 50) + 10,
-            description: type === 'ACQUIRED' ? '학습 완료 보상' : (type === 'USED' ? '상점 아이템 구매' : '유효기간 만료 소멸'),
+            amount,
+            description,
             date: `2024-01-${String(Math.floor(Math.random() * 28) + 1).padStart(2, '0')} ${String(Math.floor(Math.random() * 24)).padStart(2, '0')}:00`
         };
     }).sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
