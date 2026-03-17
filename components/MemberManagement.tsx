@@ -571,14 +571,6 @@ const MemberDetailModal = ({ user, onClose }: { user: User; onClose: () => void 
                                   <span className="bg-slate-800 text-white w-5 h-5 rounded-full flex items-center justify-center text-xs mr-2">!</span>
                                   더 좋은 표현
                                 </div>
-                                <div className="flex space-x-2">
-                                  <button className="w-8 h-8 rounded-full bg-white border border-slate-200 flex items-center justify-center text-slate-500 hover:bg-slate-100 hover:text-slate-800 transition-colors shadow-sm">
-                                    <Globe size={14} />
-                                  </button>
-                                  <button className="w-8 h-8 rounded-full bg-white border border-slate-200 flex items-center justify-center text-slate-500 hover:bg-slate-100 hover:text-slate-800 transition-colors shadow-sm">
-                                    <Volume2 size={14} />
-                                  </button>
-                                </div>
                               </div>
                               <div className="text-sm font-bold text-emerald-700 leading-relaxed mb-4">
                                 {conv.correctedText}
