@@ -3,6 +3,12 @@ import DataList from './DataList';
 import { Group, GroupStatus, GroupType, GroupCode, GroupAuthPreReg } from '../types';
 import { X, Users, Building, School, Key, FileText, CheckCircle, Plus, Trash2, Calendar, Target } from 'lucide-react';
 
+const MOCK_PROGRAMS = [
+    { id: 'prog-1', name: '기본 한국어 학습', levels: ['입문', '초급1', '초급2', '중급1', '중급2', '고급1', '고급2'] },
+    { id: 'prog-2', name: '비즈니스 실무 한국어', levels: ['기본', '심화'] },
+    { id: 'prog-3', name: 'TOPIK 대비반', levels: ['I', 'II'] },
+];
+
 const MOCK_GROUPS: Group[] = [
     {
         id: '1',
@@ -55,7 +61,7 @@ const MOCK_GROUPS: Group[] = [
         maxMembers: 50,
         contractStart: '2024-01-01',
         contractEnd: '2024-12-31',
-        status: (i % 5 === 0 ? 'SUSPENDED' : 'ACTIVE') as GroupStatus,
+        status: (i % 5 === 0 ? 'SUSPENDED' : i % 4 === 0 ? 'PENDING' : 'ACTIVE') as GroupStatus,
         createdAt: `2023-11-${10 + i}`
     }))
 ];
@@ -65,6 +71,8 @@ const GroupManagement: React.FC = () => {
     const [selectedGroup, setSelectedGroup] = useState<Group | null>(null);
     const [isEditing, setIsEditing] = useState(false);
     const [activeTab, setActiveTab] = useState<'BASIC' | 'CODES' | 'AUTH'>('BASIC');
+
+    const [newAuthReg, setNewAuthReg] = useState({ name: '', email: '', groupCode: '' });
 
     // Search/Filter states
     const [searchParams, setSearchParams] = useState({
@@ -104,7 +112,7 @@ const GroupManagement: React.FC = () => {
             maxMembers: 100,
             contractStart: new Date().toISOString().split('T')[0],
             contractEnd: new Date(new Date().setFullYear(new Date().getFullYear() + 1)).toISOString().split('T')[0],
-            status: 'ACTIVE',
+            status: 'PENDING',
             createdAt: new Date().toISOString().split('T')[0]
         });
         setIsEditing(true);
@@ -135,8 +143,102 @@ const GroupManagement: React.FC = () => {
         handleCloseModal();
     };
 
+    const handleCreateCode = () => {
+        if (!selectedGroup) return;
+        const newCode: GroupCode = {
+            id: `code-${Date.now()}`,
+            groupId: selectedGroup.id,
+            code: 'GRP-' + Math.random().toString(36).substring(2, 8).toUpperCase(),
+            assignedLevels: ['전체'],
+            startDate: selectedGroup.contractStart || new Date().toISOString().split('T')[0],
+            endDate: selectedGroup.contractEnd || new Date().toISOString().split('T')[0],
+            status: 'ACTIVE',
+            createdAt: new Date().toISOString().split('T')[0]
+        };
+        setSelectedGroup({
+            ...selectedGroup,
+            groupCodes: [...(selectedGroup.groupCodes || []), newCode]
+        });
+    };
+
+    const handleUpdateCode = (codeId: string, updates: Partial<GroupCode>) => {
+        if (!selectedGroup) return;
+        
+        let finalUpdates = { ...updates };
+        if (finalUpdates.endDate && selectedGroup.contractEnd) {
+            if (new Date(finalUpdates.endDate) > new Date(selectedGroup.contractEnd)) {
+                alert(`단체 코드의 종료일은 단체 계약 종료일(${selectedGroup.contractEnd})을 초과할 수 없습니다.`);
+                finalUpdates.endDate = selectedGroup.contractEnd;
+            }
+        }
+        if (finalUpdates.assignedProgramId) {
+            const prog = MOCK_PROGRAMS.find(p => p.id === finalUpdates.assignedProgramId);
+            if (prog) {
+                finalUpdates.assignedLevels = [...prog.levels]; // 기본으로 전체 선택
+            }
+        }
+
+        setSelectedGroup({
+            ...selectedGroup,
+            groupCodes: (selectedGroup.groupCodes || []).map(code => 
+                code.id === codeId ? { ...code, ...finalUpdates } : code
+            )
+        });
+    };
+
+    const handleDeleteCode = (codeId: string) => {
+        if (!selectedGroup) return;
+        setSelectedGroup({
+            ...selectedGroup,
+            groupCodes: (selectedGroup.groupCodes || []).filter(code => code.id !== codeId)
+        });
+    };
+
+    const handleAddAuthReg = () => {
+        if (!selectedGroup) return;
+        if (!newAuthReg.name || !newAuthReg.email || !newAuthReg.groupCode) {
+            alert('대상자 정보를 모두 입력하고 코드를 선택해주세요.');
+            return;
+        }
+        const newReg: GroupAuthPreReg = {
+            id: `auth-${Date.now()}`,
+            groupId: selectedGroup.id,
+            groupCode: newAuthReg.groupCode,
+            email: newAuthReg.email,
+            name: newAuthReg.name,
+            isUsed: false
+        };
+        setSelectedGroup({
+            ...selectedGroup,
+            authPreRegs: [newReg, ...(selectedGroup.authPreRegs || [])]
+        });
+        setNewAuthReg({ ...newAuthReg, name: '', email: '' });
+    };
+
+    const handleMockExcelUpload = () => {
+        if (!selectedGroup) return;
+        if (!newAuthReg.groupCode) {
+            alert('일괄 업로드할 대상자들에게 매칭될 "단체 코드"를 먼저 선택해주세요.');
+            return;
+        }
+        const mockRegs: GroupAuthPreReg[] = Array.from({ length: 5 }).map((_, idx) => ({
+            id: `auth-bulk-${Date.now()}-${idx}`,
+            groupId: selectedGroup.id,
+            groupCode: newAuthReg.groupCode,
+            email: `bulk_user${Date.now()}_${idx}@example.com`,
+            name: `일괄등록자${idx + 1}`,
+            isUsed: false
+        }));
+        setSelectedGroup({
+            ...selectedGroup,
+            authPreRegs: [...mockRegs, ...(selectedGroup.authPreRegs || [])]
+        });
+        alert('엑셀 파일에서 5명의 대상자가 일괄 등록되었습니다.');
+    };
+
     const getStatusLabel = (status: GroupStatus) => {
         switch (status) {
+            case 'PENDING': return '대기';
             case 'ACTIVE': return '정상';
             case 'EXPIRED': return '만료';
             case 'SUSPENDED': return '정지';
@@ -201,6 +303,7 @@ const GroupManagement: React.FC = () => {
             header: '상태',
             accessor: (item: Group) => (
                 <span className={`px-2 py-1 rounded-full text-xs font-bold ${item.status === 'ACTIVE' ? 'bg-green-100 text-green-800' :
+                    item.status === 'PENDING' ? 'bg-amber-100 text-amber-800' :
                     item.status === 'EXPIRED' ? 'bg-gray-100 text-gray-800' : 'bg-red-100 text-red-800'
                     }`}>
                     {getStatusLabel(item.status)}
@@ -234,6 +337,7 @@ const GroupManagement: React.FC = () => {
                     onChange={e => setSearchParams({ ...searchParams, status: e.target.value })}
                 >
                     <option value="ALL">전체</option>
+                    <option value="PENDING">대기</option>
                     <option value="ACTIVE">정상</option>
                     <option value="EXPIRED">만료</option>
                     <option value="SUSPENDED">정지</option>
@@ -299,14 +403,12 @@ const GroupManagement: React.FC = () => {
                             <button
                                 onClick={() => setActiveTab('CODES')}
                                 className={`py-4 text-sm font-bold border-b-2 transition-all ${activeTab === 'CODES' ? 'border-indigo-600 text-indigo-600' : 'border-transparent text-slate-400 hover:text-slate-600'}`}
-                                disabled={!selectedGroup.id || selectedGroup.id.startsWith('new-')}
                             >
                                 단체 코드 관리
                             </button>
                             <button
                                 onClick={() => setActiveTab('AUTH')}
                                 className={`py-4 text-sm font-bold border-b-2 transition-all ${activeTab === 'AUTH' ? 'border-indigo-600 text-indigo-600' : 'border-transparent text-slate-400 hover:text-slate-600'}`}
-                                disabled={!selectedGroup.id || selectedGroup.id.startsWith('new-')}
                             >
                                 인증 대상자 관리
                             </button>
@@ -414,12 +516,13 @@ const GroupManagement: React.FC = () => {
                                                 <label className="block text-xs font-bold text-slate-500 mb-1.5">계약 상태</label>
                                                 {isEditing ? (
                                                     <select className="w-full h-10 px-3 border border-slate-200 rounded-xl" value={selectedGroup.status} onChange={e => setSelectedGroup({ ...selectedGroup, status: e.target.value as any })}>
+                                                        <option value="PENDING">대기</option>
                                                         <option value="ACTIVE">정상</option>
                                                         <option value="EXPIRED">만료</option>
                                                         <option value="SUSPENDED">정지</option>
                                                     </select>
                                                 ) : (
-                                                    <span className={`inline-flex px-2.5 py-1 rounded-full text-xs font-bold mt-2 ${selectedGroup.status === 'ACTIVE' ? 'bg-emerald-100 text-emerald-800' : 'bg-slate-100 text-slate-800'}`}>
+                                                    <span className={`inline-flex px-2.5 py-1 rounded-full text-xs font-bold mt-2 ${selectedGroup.status === 'ACTIVE' ? 'bg-emerald-100 text-emerald-800' : selectedGroup.status === 'PENDING' ? 'bg-amber-100 text-amber-800' : 'bg-slate-100 text-slate-800'}`}>
                                                         {getStatusLabel(selectedGroup.status)}
                                                     </span>
                                                 )}
@@ -435,10 +538,15 @@ const GroupManagement: React.FC = () => {
                                                 <h4 className="text-xs font-bold text-slate-400 uppercase flex items-center tracking-wider">
                                                     <span className="w-2 h-2 bg-amber-500 rounded-full mr-2"></span>단체 코드 목록
                                                 </h4>
-                                                <button className="flex items-center space-x-1 px-3 py-1.5 bg-indigo-50 text-indigo-600 rounded-lg text-xs font-bold hover:bg-indigo-100 transition-colors">
-                                                    <Plus size={14} />
-                                                    <span>코드 생성</span>
-                                                </button>
+                                                {isEditing && (
+                                                    <button 
+                                                        className="flex items-center space-x-1 px-3 py-1.5 bg-indigo-50 text-indigo-600 rounded-lg text-xs font-bold hover:bg-indigo-100 transition-colors"
+                                                        onClick={handleCreateCode}
+                                                    >
+                                                        <Plus size={14} />
+                                                        <span>코드 생성</span>
+                                                    </button>
+                                                )}
                                             </div>
 
                                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -454,22 +562,82 @@ const GroupManagement: React.FC = () => {
                                                                     <div className="text-[10px] text-slate-400 font-bold uppercase">Created: {code.createdAt}</div>
                                                                 </div>
                                                             </div>
-                                                            <button className="opacity-0 group-hover:opacity-100 p-1.5 text-rose-400 hover:text-rose-600 transition-all">
-                                                                <Trash2 size={16} />
-                                                            </button>
+                                                            {isEditing && (
+                                                                <button 
+                                                                    className="opacity-0 group-hover:opacity-100 p-1.5 text-rose-400 hover:text-rose-600 transition-all"
+                                                                    onClick={() => handleDeleteCode(code.id)}
+                                                                >
+                                                                    <Trash2 size={16} />
+                                                                </button>
+                                                            )}
                                                         </div>
-                                                        <div className="space-y-2">
-                                                            <div className="flex items-center text-xs font-medium text-slate-600">
-                                                                <Calendar size={14} className="mr-2 text-slate-400" />
-                                                                {code.startDate} ~ {code.endDate}
+                                                        <div className="space-y-4">
+                                                            <div>
+                                                                <label className="block text-[10px] font-bold text-slate-500 mb-1">사용 기간 설정 (계약기간 이내)</label>
+                                                                {isEditing ? (
+                                                                    <div className="flex items-center space-x-2">
+                                                                        <input type="date" className="flex-1 text-xs p-1.5 border border-slate-200 rounded outline-none focus:border-indigo-400" value={code.startDate} onChange={e => handleUpdateCode(code.id, { startDate: e.target.value })} />
+                                                                        <span className="text-slate-400 text-xs">~</span>
+                                                                        <input type="date" className="flex-1 text-xs p-1.5 border border-slate-200 rounded outline-none focus:border-indigo-400" value={code.endDate} onChange={e => handleUpdateCode(code.id, { endDate: e.target.value })} />
+                                                                    </div>
+                                                                ) : (
+                                                                    <div className="flex items-center text-xs font-medium text-slate-600">
+                                                                        <Calendar size={14} className="mr-2 text-slate-400" />
+                                                                        {code.startDate} ~ {code.endDate}
+                                                                    </div>
+                                                                )}
                                                             </div>
-                                                            <div className="flex flex-wrap gap-1.5 mt-3">
-                                                                {code.assignedLevels.map(lvl => (
-                                                                    <span key={lvl} className="px-2 py-0.5 bg-slate-100 text-slate-600 text-[10px] font-bold rounded-md flex items-center">
-                                                                        <Target size={10} className="mr-1" />
-                                                                        {lvl}
-                                                                    </span>
-                                                                ))}
+
+                                                            <div>
+                                                                <label className="block text-[10px] font-bold text-slate-500 mb-1">구독 권한 (강좌 및 코스)</label>
+                                                                {isEditing ? (
+                                                                    <div className="space-y-2">
+                                                                        <select 
+                                                                            className="w-full text-xs p-1.5 border border-slate-200 rounded outline-none focus:border-indigo-400"
+                                                                            value={code.assignedProgramId || ''}
+                                                                            onChange={e => handleUpdateCode(code.id, { assignedProgramId: e.target.value })}
+                                                                        >
+                                                                            <option value="">강좌를 선택하세요</option>
+                                                                            {MOCK_PROGRAMS.map(p => (
+                                                                                <option key={p.id} value={p.id}>{p.name}</option>
+                                                                            ))}
+                                                                        </select>
+                                                                        {code.assignedProgramId && (
+                                                                            <div className="flex flex-wrap gap-2 p-2.5 bg-slate-50/80 rounded border border-slate-100">
+                                                                                {MOCK_PROGRAMS.find(p => p.id === code.assignedProgramId)?.levels.map(lvl => (
+                                                                                    <label key={lvl} className="flex items-center space-x-1.5 text-xs text-slate-600 font-medium cursor-pointer">
+                                                                                        <input 
+                                                                                            type="checkbox" 
+                                                                                            className="rounded text-indigo-500 focus:ring-indigo-500 border-slate-300"
+                                                                                            checked={code.assignedLevels.includes(lvl)}
+                                                                                            onChange={e => {
+                                                                                                const updated = e.target.checked 
+                                                                                                    ? [...code.assignedLevels, lvl] 
+                                                                                                    : code.assignedLevels.filter(x => x !== lvl);
+                                                                                                handleUpdateCode(code.id, { assignedLevels: updated });
+                                                                                            }}
+                                                                                        />
+                                                                                        <span>{lvl}</span>
+                                                                                    </label>
+                                                                                ))}
+                                                                            </div>
+                                                                        )}
+                                                                    </div>
+                                                                ) : (
+                                                                    <div className="space-y-1.5 mt-1">
+                                                                        <div className="text-xs font-bold text-indigo-600">
+                                                                            {code.assignedProgramId ? MOCK_PROGRAMS.find(p => p.id === code.assignedProgramId)?.name : '지정되지 않음 (전체)'}
+                                                                        </div>
+                                                                        <div className="flex flex-wrap gap-1.5">
+                                                                            {code.assignedLevels.map(lvl => (
+                                                                                <span key={lvl} className="px-2 py-0.5 bg-slate-100 text-slate-600 text-[10px] font-bold rounded-md flex items-center">
+                                                                                    <Target size={10} className="mr-1" />
+                                                                                    {lvl}
+                                                                                </span>
+                                                                            ))}
+                                                                        </div>
+                                                                    </div>
+                                                                )}
                                                             </div>
                                                         </div>
                                                     </div>
@@ -491,14 +659,65 @@ const GroupManagement: React.FC = () => {
                                 {activeTab === 'AUTH' && (
                                     <div className="space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-300">
                                         <div className="bg-white rounded-2xl border border-slate-200/60 shadow-sm overflow-hidden">
-                                            <div className="p-6 border-b border-slate-100 flex justify-between items-center">
-                                                <h4 className="text-xs font-bold text-slate-400 uppercase flex items-center tracking-wider">
-                                                    <span className="w-2 h-2 bg-emerald-500 rounded-full mr-2"></span>인증 대상자 명단 (사전 등록 정보)
-                                                </h4>
-                                                <button className="flex items-center space-x-1 px-3 py-1.5 bg-emerald-50 text-emerald-600 rounded-lg text-xs font-bold hover:bg-emerald-100 transition-colors">
-                                                    <Plus size={14} />
-                                                    <span>대상자 추가</span>
-                                                </button>
+                                            <div className="p-6 border-b border-slate-100 flex flex-col space-y-4">
+                                                <div className="flex justify-between items-center">
+                                                    <h4 className="text-xs font-bold text-slate-400 uppercase flex items-center tracking-wider">
+                                                        <span className="w-2 h-2 bg-emerald-500 rounded-full mr-2"></span>인증 대상자 명단 (사전 등록 정보)
+                                                    </h4>
+                                                </div>
+                                                
+                                                {isEditing && (
+                                                    <div className="bg-slate-50 p-4 rounded-xl border border-slate-200">
+                                                        <div className="flex flex-wrap items-end gap-3">
+                                                            <div className="flex-1 min-w-[200px]">
+                                                                <label className="block text-[10px] font-bold text-slate-500 mb-1">매칭할 단체 코드 선택</label>
+                                                                <select 
+                                                                    className="w-full h-9 px-2 text-xs border border-slate-200 rounded outline-none"
+                                                                    value={newAuthReg.groupCode}
+                                                                    onChange={e => setNewAuthReg({ ...newAuthReg, groupCode: e.target.value })}
+                                                                >
+                                                                    <option value="">코드를 선택하세요</option>
+                                                                    {selectedGroup.groupCodes?.map(c => (
+                                                                        <option key={c.id} value={c.code}>{c.code}</option>
+                                                                    ))}
+                                                                </select>
+                                                            </div>
+                                                            <div className="flex-1 min-w-[150px]">
+                                                                <label className="block text-[10px] font-bold text-slate-500 mb-1">성명</label>
+                                                                <input 
+                                                                    type="text" 
+                                                                    className="w-full h-9 px-2 text-xs border border-slate-200 rounded outline-none"
+                                                                    placeholder="홍길동"
+                                                                    value={newAuthReg.name}
+                                                                    onChange={e => setNewAuthReg({ ...newAuthReg, name: e.target.value })}
+                                                                />
+                                                            </div>
+                                                            <div className="flex-1 min-w-[200px]">
+                                                                <label className="block text-[10px] font-bold text-slate-500 mb-1">이메일</label>
+                                                                <input 
+                                                                    type="email" 
+                                                                    className="w-full h-9 px-2 text-xs border border-slate-200 rounded outline-none"
+                                                                    placeholder="user@example.com"
+                                                                    value={newAuthReg.email}
+                                                                    onChange={e => setNewAuthReg({ ...newAuthReg, email: e.target.value })}
+                                                                />
+                                                            </div>
+                                                            <button 
+                                                                onClick={handleAddAuthReg}
+                                                                className="h-9 px-4 bg-emerald-600 text-white rounded text-xs font-bold hover:bg-emerald-700 transition-colors shadow-sm"
+                                                            >
+                                                                개별 등록
+                                                            </button>
+                                                            <button 
+                                                                onClick={handleMockExcelUpload}
+                                                                className="h-9 px-4 bg-indigo-50 text-indigo-600 border border-indigo-200 rounded text-xs font-bold hover:bg-indigo-100 transition-colors shadow-sm flex items-center"
+                                                            >
+                                                                <FileText size={14} className="mr-1" /> 엑셀 파일 업로드(일괄)
+                                                            </button>
+                                                        </div>
+                                                        <p className="text-[10px] text-slate-400 mt-2">※ 엑셀 파일(CSV, XLSX)을 업로드하여 다수의 대상자를 코드로 한 번에 매칭할 수 있습니다. (테스트용 버튼)</p>
+                                                    </div>
+                                                )}
                                             </div>
 
                                             <table className="min-w-full divide-y divide-slate-100">
@@ -523,8 +742,8 @@ const GroupManagement: React.FC = () => {
                                                             <td className="px-6 py-4 text-center">
                                                                 {reg.isUsed ? (
                                                                     <div className="flex items-center justify-center text-emerald-600 font-bold text-[10px]">
-                                                                        <CheckCircle size={12} className="mr-1" />
-                                                                        인증완료 ({reg.usedAt})
+                                                                        <CheckCircle size={14} className="mr-1" />
+                                                                        ✅ 인증완료 ({reg.usedAt || '-'})
                                                                     </div>
                                                                 ) : (
                                                                     <span className="text-slate-400 font-bold text-[10px]">미인증</span>
@@ -564,14 +783,12 @@ const GroupManagement: React.FC = () => {
                                     {selectedGroup.id && !selectedGroup.id.startsWith('new-') ? '정보 저장' : '단체 등록'}
                                 </button>
                             ) : (
-                                activeTab === 'BASIC' && (
-                                    <button
-                                        onClick={() => setIsEditing(true)}
-                                        className="px-8 py-2.5 bg-slate-800 text-white rounded-xl hover:bg-slate-900 font-black text-sm shadow-lg shadow-slate-200 transition-all hover:-translate-y-0.5"
-                                    >
-                                        정보 수정
-                                    </button>
-                                )
+                                <button
+                                    onClick={() => setIsEditing(true)}
+                                    className="px-8 py-2.5 bg-slate-800 text-white rounded-xl hover:bg-slate-900 font-black text-sm shadow-lg shadow-slate-200 transition-all hover:-translate-y-0.5"
+                                >
+                                    정보 수정
+                                </button>
                             )}
                         </div>
                     </div>

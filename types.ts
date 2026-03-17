@@ -159,7 +159,7 @@ export interface Inquiry {
   answeredAt?: string;  // 변경 일시 (답변 완료 시)
 }
 
-export type GroupStatus = 'ACTIVE' | 'EXPIRED' | 'SUSPENDED';
+export type GroupStatus = 'PENDING' | 'ACTIVE' | 'EXPIRED' | 'SUSPENDED';
 export type GroupType = 'COMPANY' | 'SCHOOL' | 'PUBLIC' | 'OTHER';
 
 export interface Group {
@@ -187,6 +187,7 @@ export interface GroupCode {
   id: string;
   groupId: string;
   code: string;           // 유니크 단체 코드
+  assignedProgramId?: string; // 배정 강좌 (예: 기본 한국어 학습)
   assignedLevels: string[]; // 이용 가능 단계 (입문, 초급1, 초급2 등)
   startDate: string;      // 유효 기간 시작
   endDate: string;        // 유효 기간 종료
