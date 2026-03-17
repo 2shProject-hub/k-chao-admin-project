@@ -3,9 +3,9 @@ import React, { useState, useMemo } from 'react';
 import DataList from './DataList';
 import { User, UserType, LoginMethod, UserStatus, RewardHistory } from '../types';
 import { ICON_MAP } from '../constants';
-import { Chrome, Facebook, Apple, Calendar, X, ChevronLeft, ChevronRight, Zap, Flame } from 'lucide-react';
+import { Chrome, Facebook, Apple, Calendar, X, ChevronLeft, ChevronRight, Zap, Flame, Volume2, Globe, FileText, Check } from 'lucide-react';
 import { MOCK_USERS, MOCK_TEACHERS, MOCK_ORGANIZATIONS, generateMockRewardHistory } from './mockData';
-import { getMockRewardTransactions, getMockLearningHistory } from './mockDataHelpers';
+import { getMockRewardTransactions, getMockLearningHistory, getMockLearningReport } from './mockDataHelpers';
 
 interface MemberManagementProps {
   mode: UserStatus;
@@ -17,6 +17,12 @@ const MemberDetailModal = ({ user, onClose }: { user: User; onClose: () => void 
   const [activeTab, setActiveTab] = useState<'BASIC' | 'LEARNING' | 'REWARD'>('BASIC');
   const [page, setPage] = useState(1);
   const itemsPerPage = 10;
+  const [selectedReportId, setSelectedReportId] = useState<string | null>(null);
+
+  // Memo handling
+  const [adminMemo, setAdminMemo] = useState('');
+  const [isMemoSaving, setIsMemoSaving] = useState(false);
+  const [memoSaved, setMemoSaved] = useState(false);
 
   // Data
   const rewardTransactions = useMemo(() => getMockRewardTransactions(user.id), [user.id]);
@@ -36,6 +42,27 @@ const MemberDetailModal = ({ user, onClose }: { user: User; onClose: () => void 
   const currentData = getCurrentData();
   const paginatedData = currentData.slice((page - 1) * itemsPerPage, page * itemsPerPage);
   const totalPages = Math.ceil(currentData.length / itemsPerPage);
+
+  // Derived Report Data
+  const learningReport = useMemo(() => {
+    if (!selectedReportId) return null;
+    const historyItem = learningHistory.find(h => h.reportId === selectedReportId);
+    if (!historyItem) return null;
+    const report = getMockLearningReport(selectedReportId, historyItem);
+    setAdminMemo(report.adminMemo || '');
+    setMemoSaved(false);
+    return report;
+  }, [selectedReportId, learningHistory]);
+
+  const handleSaveMemo = () => {
+    setIsMemoSaving(true);
+    // Simulate API call
+    setTimeout(() => {
+      setIsMemoSaving(false);
+      setMemoSaved(true);
+      setTimeout(() => setMemoSaved(false), 2000);
+    }, 500);
+  };
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 backdrop-blur-sm p-4 animate-in fade-in duration-200">
@@ -212,7 +239,16 @@ const MemberDetailModal = ({ user, onClose }: { user: User; onClose: () => void 
                           <td className="px-6 py-4">
                             <div className="flex flex-col">
                               <span className="text-sm font-bold text-slate-800">{item.lessonTitle}</span>
-                              <span className="text-xs text-slate-500">{item.moduleTitle} &gt; {item.activityTitle}</span>
+                              {item.reportId ? (
+                                <button 
+                                  onClick={() => setSelectedReportId(item.reportId)}
+                                  className="text-xs text-indigo-500 hover:text-indigo-700 font-bold flex items-center mt-1 text-left w-fit"
+                                >
+                                  {item.moduleTitle} &gt; {item.activityTitle} <ChevronRight size={12} className="ml-1" />
+                                </button>
+                              ) : (
+                                <span className="text-xs text-slate-500 mt-1">{item.moduleTitle} &gt; {item.activityTitle}</span>
+                              )}
                             </div>
                           </td>
                           <td className="px-6 py-4 text-right text-sm font-medium text-slate-600">{item.studyTimeMinutes}분</td>
@@ -360,8 +396,220 @@ const MemberDetailModal = ({ user, onClose }: { user: User; onClose: () => void 
             </div>
           </div>
         )}
+
+        {/* Detailed Learning Report Modal Overlay */}
+        {selectedReportId && learningReport && ( // Use learningReport here
+          <div className="fixed inset-0 z-[60] flex items-center justify-center bg-slate-900/50 backdrop-blur-sm p-4 animate-in fade-in zoom-in duration-200">
+            <div className="bg-white rounded-2xl shadow-2xl w-full max-w-6xl h-[90vh] flex flex-col ring-1 ring-slate-900/5 overflow-hidden">
+              {/* Report Header */}
+              <div className="flex-none px-6 py-5 border-b border-slate-100 bg-slate-50 flex justify-between items-center">
+                <div>
+                  <h3 className="text-xl font-bold text-slate-800 tracking-tight">학습 상세 리포트</h3>
+                  <div className="flex gap-2 text-xs font-semibold text-slate-500 mt-1.5 items-center">
+                    <span className="bg-white border border-slate-200 px-2 py-0.5 rounded text-indigo-600">{learningReport.studyDate}</span>
+                    <span>|</span>
+                    <span>{learningReport.courseTitle}</span>
+                    <ChevronRight size={12} />
+                    <span>{learningReport.lessonTitle}</span>
+                    <span>|</span>
+                    <span>{learningReport.studyTimeMinutes}분 소요</span>
+                  </div>
+                </div>
+                <button
+                  onClick={() => setSelectedReportId(null)}
+                  className="p-2 hover:bg-slate-200 rounded-full text-slate-400 hover:text-slate-600 transition-colors"
+                >
+                  <X size={24} />
+                </button>
+              </div>
+
+              {/* Report Content */}
+              <div className="flex-1 overflow-y-auto p-6 bg-slate-50 flex flex-col lg:flex-row gap-6 custom-scrollbar relative">
+                
+                {/* Left Column: Summary, Feedback & Memo */}
+                <div className="w-full lg:w-[40%] flex flex-col space-y-6 shrink-0 pb-4">
+                  {/* Today's Expressions */}
+                  <div className="bg-white p-5 rounded-2xl border border-slate-200/60 shadow-sm relative overflow-hidden">
+                    <div className="absolute top-0 left-0 w-1 h-full bg-blue-500"></div>
+                    <h4 className="text-sm font-bold text-slate-800 mb-3 flex items-center">
+                      <span className="text-blue-500 mr-2">▶</span> 오늘 배운 표현
+                    </h4>
+                    <div className="bg-slate-50 rounded-xl p-4 min-h-[120px] max-h-[180px] overflow-y-auto custom-scrollbar">
+                      <ul className="space-y-2 text-sm text-slate-600 font-medium">
+                        {learningReport.todayExpressions.map((exp: string, idx: number) => (
+                          <li key={idx} className={idx === 0 ? "text-indigo-600 mb-3" : "flex items-start"}>
+                            {idx > 0 && <span className="mr-2 text-slate-300">•</span>}
+                            <span>{exp}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  </div>
+
+                  {/* Quiz Results */}
+                  <div className="bg-white p-5 rounded-2xl border border-slate-200/60 shadow-sm relative overflow-hidden flex items-center justify-between">
+                    <div className="absolute top-0 left-0 w-1 h-full bg-emerald-500"></div>
+                    <h4 className="text-sm font-bold text-slate-800 flex items-center">
+                      <span className="text-emerald-500 mr-2">▶</span> 문항 풀이 결과
+                    </h4>
+                    <div className="text-slate-400 text-sm font-medium">
+                      정답 문항 <span className="text-2xl font-black text-emerald-600 mx-1">{learningReport.quizResult.correctCounts}</span> / 전체 문항 <span className="text-lg font-bold text-slate-600 mx-1">{learningReport.quizResult.totalCounts}</span>
+                    </div>
+                  </div>
+
+                  {/* Pronunciation Evaluation */}
+                  <div className="bg-white p-5 rounded-2xl border border-slate-200/60 shadow-sm relative overflow-hidden flex flex-col">
+                    <div className="absolute top-0 left-0 w-1 h-full bg-orange-500"></div>
+                    <h4 className="text-sm font-bold text-slate-800 mb-4 flex items-center">
+                      <span className="text-orange-500 mr-2">▶</span> 발음 평가
+                    </h4>
+                    <div className="flex items-center">
+                      <div className="flex-none mr-8 text-center relative">
+                        <svg className="w-24 h-24 transform -rotate-90">
+                          <circle cx="48" cy="48" r="40" stroke="currentColor" strokeWidth="8" fill="transparent" className="text-slate-100" />
+                          <circle cx="48" cy="48" r="40" stroke="currentColor" strokeWidth="8" fill="transparent" 
+                            className="text-orange-500" 
+                            strokeDasharray="251.2" 
+                            strokeDashoffset={251.2 - (251.2 * learningReport.pronunciationScore.total) / 100} 
+                            strokeLinecap="round"
+                          />
+                        </svg>
+                        <div className="absolute inset-0 flex flex-col items-center justify-center">
+                          <span className="text-slate-400 text-[10px] font-bold">발음 점수</span>
+                          <span className="text-2xl font-black text-slate-800">{learningReport.pronunciationScore.total}</span>
+                        </div>
+                      </div>
+                      <div className="flex-1 space-y-3">
+                        <div className="text-xs font-bold text-slate-500 mb-1 border-b border-slate-100 pb-2">점수 분석 결과</div>
+                        {[
+                          { label: '정확도', score: learningReport.pronunciationScore.accuracy },
+                          { label: '유창성', score: learningReport.pronunciationScore.fluency },
+                          { label: '완성도', score: learningReport.pronunciationScore.completeness }
+                        ].map(item => (
+                          <div key={item.label} className="flex items-center text-xs">
+                            <span className="w-12 text-slate-500 font-semibold">{item.label}</span>
+                            <div className="flex-1 mx-3 h-2 bg-slate-100 rounded-full overflow-hidden">
+                              <div className="h-full bg-slate-400 rounded-full" style={{ width: `${item.score}%` }}></div>
+                            </div>
+                            <span className="w-10 text-right text-slate-600 font-bold">{item.score}/100</span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Teacher Feedback */}
+                  <div className="bg-white p-5 rounded-2xl border border-slate-200/60 shadow-sm relative overflow-hidden flex flex-col">
+                    <div className="absolute top-0 left-0 w-1 h-full bg-teal-500"></div>
+                    <h4 className="text-sm font-bold text-slate-800 mb-4 flex items-center">
+                      <span className="text-teal-500 mr-2">▶</span> 선생님 의견
+                    </h4>
+                    <div className="bg-slate-50 rounded-xl p-5 space-y-4">
+                      <div>
+                        <div className="text-sm font-bold text-slate-700 mb-2">잘한 부분</div>
+                        <p className="text-sm text-slate-600 leading-relaxed min-h-[40px]">
+                          {learningReport.teacherFeedback.strengths}
+                        </p>
+                      </div>
+                      <div className="border-t border-slate-200 pt-4">
+                        <div className="text-sm font-bold text-slate-700 mb-2">개선할 부분</div>
+                        <p className="text-sm text-slate-600 leading-relaxed min-h-[40px]">
+                          {learningReport.teacherFeedback.improvements}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Admin Memo */}
+                  <div className="bg-white p-5 rounded-2xl border border-slate-200/60 shadow-sm relative overflow-hidden flex flex-col">
+                    <div className="absolute top-0 left-0 w-1 h-full bg-slate-500"></div>
+                    <div className="flex items-center justify-between mb-4">
+                      <h4 className="text-sm font-bold text-slate-800 flex items-center">
+                        <FileText size={16} className="text-slate-500 mr-2" /> 관리자 메모
+                      </h4>
+                      <button 
+                        onClick={handleSaveMemo}
+                        className={`text-xs font-bold px-3 py-1.5 rounded-lg transition-colors flex items-center ${memoSaved ? 'bg-emerald-100 text-emerald-700' : 'bg-slate-800 text-white hover:bg-slate-700'}`}
+                      >
+                        {isMemoSaving ? '저장 중...' : memoSaved ? <><Check size={14} className="mr-1" /> 저장됨</> : '저장하기'}
+                      </button>
+                    </div>
+                    <textarea 
+                      value={adminMemo}
+                      onChange={(e) => setAdminMemo(e.target.value)}
+                      placeholder="회원의 해당 수업에 대한 관리자 메모를 입력할 수 있습니다."
+                      className="w-full bg-slate-50 outline-none p-4 rounded-xl border border-slate-100 focus:border-slate-300 focus:ring-2 focus:ring-slate-100 text-sm text-slate-700 resize-y min-h-[120px] custom-scrollbar"
+                    />
+                  </div>
+
+                </div>
+
+                {/* Right Column: AI Conversations */}
+                <div className="w-full lg:w-[60%] flex flex-col bg-white rounded-2xl border border-slate-200/60 shadow-sm overflow-hidden min-h-[500px] shrink-0 pb-4">
+                    {/* Header */}
+                    <div className="flex-none px-6 py-4 border-b border-slate-100 bg-purple-50">
+                      <h4 className="text-sm font-bold text-purple-900 flex items-center">
+                        <span className="text-purple-500 mr-2">▶</span> 교정 받은 대화 리스트
+                      </h4>
+                    </div>
+
+                    <div className="flex-1 overflow-y-auto p-6 bg-slate-50 space-y-6 custom-scrollbar">
+                      {learningReport.aiConversations.length === 0 ? (
+                        <div className="flex flex-col items-center justify-center h-full">
+                          <span className="text-slate-400 font-bold bg-white px-6 py-4 rounded-xl border border-slate-200 shadow-sm">교정 받은 대화 내역이 없습니다.</span>
+                        </div>
+                      ) : (
+                        learningReport.aiConversations.map((conv: any) => (
+                          <div key={conv.id} className="bg-white border text-left border-slate-200 rounded-2xl p-5 shadow-sm">
+                            <div className="text-sm font-medium text-slate-800 mb-4 leading-relaxed">
+                              {conv.originalText}
+                            </div>
+                            
+                            <div className="bg-purple-50/50 border border-purple-100 rounded-xl p-4">
+                              <div className="flex items-center justify-between mb-3 border-b border-purple-100 pb-3">
+                                <div className="flex items-center font-bold text-sm text-slate-800">
+                                  <span className="bg-slate-800 text-white w-5 h-5 rounded-full flex items-center justify-center text-xs mr-2">!</span>
+                                  더 좋은 표현
+                                </div>
+                                <div className="flex space-x-2">
+                                  <button className="w-8 h-8 rounded-full bg-white border border-slate-200 flex items-center justify-center text-slate-500 hover:bg-slate-100 hover:text-slate-800 transition-colors shadow-sm">
+                                    <Globe size={14} />
+                                  </button>
+                                  <button className="w-8 h-8 rounded-full bg-white border border-slate-200 flex items-center justify-center text-slate-500 hover:bg-slate-100 hover:text-slate-800 transition-colors shadow-sm">
+                                    <Volume2 size={14} />
+                                  </button>
+                                </div>
+                              </div>
+                              <div className="text-sm font-bold text-emerald-700 leading-relaxed mb-4">
+                                {conv.correctedText}
+                              </div>
+                              <div className="text-xs text-slate-600 leading-relaxed tracking-tight bg-white p-3 rounded-lg border border-purple-100 border-dashed">
+                                {conv.explanation}
+                              </div>
+                            </div>
+                          </div>
+                        ))
+                      )}
+                    </div>
+                </div>
+
+              </div>
+              
+              {/* Report Footer */}
+              <div className="flex-none px-6 py-4 border-t border-slate-100 bg-white flex justify-center">
+                <button
+                  onClick={() => setSelectedReportId(null)}
+                  className="px-8 py-3 bg-slate-800 text-white rounded-xl font-bold shadow-lg shadow-slate-200 hover:bg-slate-900 transition-all text-sm w-full max-w-xs"
+                >
+                  확인
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
       </div>
-    </div >
+    </div>
   );
 };
 

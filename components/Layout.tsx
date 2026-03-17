@@ -92,63 +92,87 @@ const Layout: React.FC<LayoutProps> = ({ children, onLogout }) => {
         </nav>
       </aside>
 
-      {/* Main Content */}
-      <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
-        {/* Header */}
-        <header className="h-12 bg-white border-b border-gray-200 flex items-center justify-between px-4 shrink-0 z-20 shadow-sm">
-          <button onClick={() => setSidebarOpen(!isSidebarOpen)} className="p-1 hover:bg-gray-100 rounded">
-            <Menu className="h-5 w-5 text-gray-500" />
-          </button>
-
-          <div className="flex items-center space-x-4">
-            <div className="flex items-center space-x-1 border-r border-gray-200 pr-4">
-              <Globe className="h-4 w-4 text-gray-500" />
-              <select
-                value={language}
-                onChange={(e) => setLanguage(e.target.value as 'ko' | 'vn')}
-                className="text-xs font-bold text-gray-600 bg-transparent border-none focus:ring-0 cursor-pointer outline-none"
-              >
-                <option value="ko">한국어</option>
-                <option value="vn">Tiếng Việt</option>
-              </select>
-            </div>
-            <div className="flex items-center space-x-2">
-              <span className="text-xs font-bold text-gray-500 bg-gray-100 px-2 py-0.5 rounded">슈퍼 관리자</span>
-              <span className="text-xs font-semibold text-gray-700">admin01</span>
-            </div>
-            <button
-              onClick={onLogout}
-              className="flex items-center space-x-1 text-gray-400 hover:text-red-500 transition-colors text-xs font-bold"
-            >
-              <LogOut className="h-4 w-4" />
-              <span>로그아웃</span>
+      {/* Main Content + Description Sidebar Container */}
+      <div className="flex-1 flex overflow-hidden">
+        {/* Center Column: Header + Main */}
+        <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
+          {/* Header */}
+          <header className="h-12 bg-white border-b border-gray-200 flex items-center justify-between px-4 shrink-0 z-20 shadow-sm">
+            <button onClick={() => setSidebarOpen(!isSidebarOpen)} className="p-1 hover:bg-gray-100 rounded">
+              <Menu className="h-5 w-5 text-gray-500" />
             </button>
-          </div>
-        </header>
 
-        {/* Content Area */}
-        <main className="flex-1 overflow-y-auto p-5">
-          {(() => {
-            const activeInfo = findActiveMenu(location.pathname, NAVIGATION);
-            if (activeInfo && activeInfo.item.path !== '/') {
-              const { item, parent } = activeInfo;
-              const title = item.label;
-              const breadcrumb = parent ? `${parent.label} > ${item.label}` : item.label;
+            <div className="flex items-center space-x-4">
+              <div className="flex items-center space-x-1 border-r border-gray-200 pr-4">
+                <Globe className="h-4 w-4 text-gray-500" />
+                <select
+                  value={language}
+                  onChange={(e) => setLanguage(e.target.value as 'ko' | 'vn')}
+                  className="text-xs font-bold text-gray-600 bg-transparent border-none focus:ring-0 cursor-pointer outline-none"
+                >
+                  <option value="ko">한국어</option>
+                  <option value="vn">Tiếng Việt</option>
+                </select>
+              </div>
+              <div className="flex items-center space-x-2">
+                <span className="text-xs font-bold text-gray-500 bg-gray-100 px-2 py-0.5 rounded">슈퍼 관리자</span>
+                <span className="text-xs font-semibold text-gray-700">admin01</span>
+              </div>
+              <button
+                onClick={onLogout}
+                className="flex items-center space-x-1 text-gray-400 hover:text-red-500 transition-colors text-xs font-bold"
+              >
+                <LogOut className="h-4 w-4" />
+                <span>로그아웃</span>
+              </button>
+            </div>
+          </header>
 
-              return (
-                <div className="flex items-center justify-between mb-2">
-                  <div>
-                    <h1 className="text-xl font-bold text-gray-800">{title}</h1>
-                    <div className="text-xs text-gray-400">{breadcrumb}</div>
+          {/* Content Area */}
+          <main className="flex-1 overflow-y-auto p-5 pb-20">
+            {(() => {
+              const activeInfo = findActiveMenu(location.pathname, NAVIGATION);
+              if (activeInfo && activeInfo.item.path !== '/') {
+                const { item, parent } = activeInfo;
+                const title = item.label;
+                const breadcrumb = parent ? `${parent.label} > ${item.label}` : item.label;
+
+                return (
+                  <div className="flex items-center justify-between mb-4">
+                    <div>
+                      <h1 className="text-2xl font-black text-slate-800 tracking-tight">{title}</h1>
+                      <div className="text-xs text-slate-400 font-bold uppercase tracking-wider mt-1">{breadcrumb}</div>
+                    </div>
                   </div>
-                  <div></div>
-                </div>
-              );
-            }
-            return null;
-          })()}
-          {children}
-        </main>
+                );
+              }
+              return null;
+            })()}
+            {children}
+          </main>
+        </div>
+
+        {/* Right Sidebar: Description (그램1.png 스타일 고도화) - 나중에 내용을 추가할 예정이므로 현재는 숨김 처리 */}
+        <aside className="hidden w-[320px] bg-[#165a72] text-white flex-col shrink-0 overflow-hidden border-l border-white/5 shadow-[-10px_0_40px_rgba(0,0,0,0.1)]">
+          <div className="p-8 border-b border-white/10 bg-[#124d61]">
+            <h2 className="text-2xl font-black tracking-tight mb-2">Description</h2>
+            <div className="w-10 h-1 bg-sky-400 rounded-full"></div>
+          </div>
+
+          <div className="flex-1 overflow-y-auto p-8 custom-sidebar-scroll space-y-8">
+            <div className="py-20 flex flex-col items-center justify-center text-center opacity-40">
+              <div className="w-16 h-16 border-2 border-dashed border-sky-300/30 rounded-3xl mb-4 flex items-center justify-center">
+                <div className="w-2 h-2 bg-sky-400 rounded-full animate-pulse"></div>
+              </div>
+              <p className="text-xs font-bold tracking-widest uppercase">Content Waiting</p>
+              <p className="text-[10px] mt-2 text-sky-100/50">화면별 기능 상세 설명이<br />준비 중입니다.</p>
+            </div>
+          </div>
+
+          <div className="p-6 bg-[#0e3f4f] text-[10px] text-sky-400/40 font-black tracking-[0.2em] uppercase border-t border-white/5">
+            Admin Management OS v1.2
+          </div>
+        </aside>
       </div>
     </div>
   );

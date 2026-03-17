@@ -55,49 +55,133 @@ const LoginPage: React.FC<{ onLogin: () => void }> = ({ onLogin }) => {
   };
 
   return (
-    <div className="min-h-screen bg-[#F8FAFC] flex items-center justify-center p-4">
-      <div className="bg-white rounded-3xl shadow-[0_20px_50px_rgba(8,112,184,0.08)] w-full max-w-md p-10 relative overflow-hidden">
-        <div className="absolute top-0 left-0 w-full h-1.5 bg-gradient-to-r from-blue-500 to-indigo-600"></div>
-        <div className="text-center mb-10">
-          <div className="w-20 h-20 bg-blue-50 rounded-[2rem] flex items-center justify-center mx-auto mb-6 transform rotate-12">
-            <span className="text-blue-600 font-bold text-4xl -rotate-12">K</span>
-          </div>
-          <h1 className="text-2xl font-black text-gray-900 tracking-tight">K-Chao 관리자</h1>
-          <p className="text-gray-400 mt-2 font-medium italic">K-Chao Admin</p>
-        </div>
-        <form onSubmit={handleSubmit} className="space-y-5">
-          <div>
-            <label className="block text-sm font-bold text-gray-700 mb-2 ml-1">아이디</label>
-            <input
-              type="text"
-              value={id}
-              onChange={e => { setId(e.target.value); setError(''); }}
-              className="w-full px-5 py-4 border-2 border-gray-100 rounded-2xl focus:border-blue-500 focus:ring-4 focus:ring-blue-50/50 outline-none transition-all font-medium"
-              placeholder="영문/숫자 조합 4자 이상"
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-bold text-gray-700 mb-2 ml-1">비밀번호</label>
-            <input
-              type="password"
-              value={password}
-              onChange={e => { setPassword(e.target.value); setError(''); }}
-              className="w-full px-5 py-4 border-2 border-gray-100 rounded-2xl focus:border-blue-500 focus:ring-4 focus:ring-blue-50/50 outline-none transition-all font-medium"
-              placeholder="영문+숫자 포함 6자 이상"
-            />
-          </div>
-          {error && (
-            <div className="bg-red-50 p-3 rounded-xl flex items-center space-x-2">
-              <div className="w-1.5 h-1.5 bg-red-500 rounded-full animate-pulse"></div>
-              <p className="text-red-500 text-xs font-bold">{error}</p>
+    <div className="min-h-screen bg-[#F8FAFC] flex overflow-hidden">
+      {/* 좌측: 로그인 폼 영역 */}
+      <div className="flex-1 flex items-center justify-center p-6 bg-slate-50/50">
+        <div className="bg-white rounded-[2.5rem] shadow-[0_20px_60px_rgba(8,112,184,0.06)] w-full max-w-md p-12 relative overflow-hidden border border-slate-100">
+          <div className="absolute top-0 left-0 w-full h-1.5 bg-gradient-to-r from-blue-500 to-indigo-600"></div>
+
+          <div className="text-center mb-10">
+            <div className="w-20 h-20 bg-blue-50 rounded-[2rem] flex items-center justify-center mx-auto mb-6 transform rotate-12 shadow-sm">
+              <span className="text-blue-600 font-black text-4xl -rotate-12">K</span>
             </div>
-          )}
-          <button type="submit" className="w-full py-5 bg-blue-600 text-white rounded-2xl font-black text-lg hover:bg-blue-700 transform hover:-translate-y-1 transition-all shadow-xl shadow-blue-100">
-            로그인
-          </button>
-        </form>
-        <div className="mt-10 pt-8 border-t border-gray-50 flex items-center justify-center text-[10px] text-gray-400 font-bold tracking-widest uppercase">
-          K-Study Management Portal
+            <h1 className="text-2xl font-black text-slate-900 tracking-tight uppercase">K-Chao 관리자</h1>
+            <p className="text-slate-400 mt-2 font-bold italic text-sm tracking-widest">K-Chao Admin Portal</p>
+          </div>
+
+          <form onSubmit={handleSubmit} className="space-y-6">
+            <div className="space-y-2">
+              <label className="block text-xs font-black text-slate-500 ml-1 uppercase tracking-widest">Access ID</label>
+              <input
+                type="text"
+                value={id}
+                onChange={e => { setId(e.target.value); setError(''); }}
+                className="w-full px-6 py-4 bg-slate-50 border-2 border-slate-100 rounded-2xl focus:border-blue-500 focus:bg-white focus:ring-4 focus:ring-blue-50 outline-none transition-all font-bold text-slate-800 placeholder:text-slate-300"
+                placeholder="영문/숫자 조합 4자 이상"
+              />
+            </div>
+            <div className="space-y-2">
+              <label className="block text-xs font-black text-slate-500 ml-1 uppercase tracking-widest">Security Password</label>
+              <input
+                type="password"
+                value={password}
+                onChange={e => { setPassword(e.target.value); setError(''); }}
+                className="w-full px-6 py-4 bg-slate-50 border-2 border-slate-100 rounded-2xl focus:border-blue-500 focus:bg-white focus:ring-4 focus:ring-blue-50 outline-none transition-all font-bold text-slate-800 placeholder:text-slate-300"
+                placeholder="영문+숫자 포함 6자 이상"
+              />
+            </div>
+
+            {error && (
+              <div className="bg-red-50 p-4 rounded-xl flex items-center space-x-3 border border-red-100">
+                <div className="w-1.5 h-1.5 bg-red-500 rounded-full animate-pulse"></div>
+                <p className="text-red-500 text-[11px] font-black">{error}</p>
+              </div>
+            )}
+
+            <button type="submit" className="w-full py-5 bg-[#2563EB] text-white rounded-2xl font-black text-lg hover:bg-blue-700 hover:-translate-y-1 transition-all shadow-xl shadow-blue-100">
+              로그인
+            </button>
+          </form>
+
+          <div className="mt-12 pt-8 border-t border-slate-50 flex items-center justify-center text-[10px] text-slate-300 font-black tracking-[0.3em] uppercase">
+            K-Study Management Portal
+          </div>
+        </div>
+      </div>
+
+      {/* 우측: 화면소개 사이드바 (그램1.png 스타일) - 나중에 내용을 추가할 예정이므로 현재는 숨김 처리 */}
+      <div className="hidden w-[400px] bg-[#165a72] text-white p-12 flex-col relative overflow-hidden shadow-[-20px_0_40px_rgba(0,0,0,0.1)]">
+        {/* 미세한 배경 패턴 */}
+        <div className="absolute top-0 left-0 w-full h-full opacity-5 pointer-events-none">
+          <svg width="100%" height="100%"><pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse"><path d="M 40 0 L 0 0 0 40" fill="none" stroke="white" strokeWidth="1" /></pattern><rect width="100%" height="100%" fill="url(#grid)" /></svg>
+        </div>
+
+        <div className="relative z-10 h-full flex flex-col">
+          <div className="mb-12">
+            <h2 className="text-3xl font-black tracking-tight mb-2">Description</h2>
+            <div className="w-12 h-1.5 bg-sky-400 rounded-full"></div>
+          </div>
+
+          <div className="space-y-10 flex-1 overflow-y-auto pr-2 custom-scrollbar">
+            <section className="group">
+              <h3 className="text-lg font-black text-sky-300 mb-3 flex items-center">
+                <span className="w-1.5 h-1.5 bg-sky-400 rounded-full mr-3"></span>
+                계정 인증 규칙
+              </h3>
+              <ul className="text-sm text-sky-50/70 space-y-2 font-semibold">
+                <li className="flex items-start">
+                  <span className="text-sky-400 mr-2">•</span>
+                  <span>ID: 영문/숫자 조합 4자 이상 (숫자만 사용 불가)</span>
+                </li>
+                <li className="flex items-start">
+                  <span className="text-sky-400 mr-2">•</span>
+                  <span>PW: 영문+숫자 포함 6자 이상 필수</span>
+                </li>
+              </ul>
+            </section>
+
+            <section className="group">
+              <h3 className="text-lg font-black text-sky-300 mb-3 flex items-center">
+                <span className="w-1.5 h-1.5 bg-sky-400 rounded-full mr-3"></span>
+                보안 정책
+              </h3>
+              <ul className="text-sm text-sky-50/70 space-y-2 font-semibold">
+                <li className="flex items-start">
+                  <span className="text-sky-400 mr-2">•</span>
+                  <span>최초 로그인 시 비밀번호 변경 강제화 프로세스 적용</span>
+                </li>
+                <li className="flex items-start">
+                  <span className="text-sky-400 mr-2">•</span>
+                  <span>세션 타임아웃 및 다중 접속 제어 로직 구현</span>
+                </li>
+              </ul>
+            </section>
+
+            <section className="group">
+              <h3 className="text-lg font-black text-sky-300 mb-3 flex items-center">
+                <span className="w-1.5 h-1.5 bg-sky-400 rounded-full mr-3"></span>
+                주요 구현 기능
+              </h3>
+              <ul className="text-sm text-sky-50/70 space-y-2 font-semibold">
+                <li className="flex items-start">
+                  <span className="text-sky-400 mr-2">•</span>
+                  <span>React State를 활용한 실시간 입력값 유효성 검사</span>
+                </li>
+                <li className="flex items-start">
+                  <span className="text-sky-400 mr-2">•</span>
+                  <span>LocalStorage 기반의 간이 인증 상태 유지 (isAdminAuth)</span>
+                </li>
+              </ul>
+            </section>
+          </div>
+
+          <div className="mt-auto pt-8 border-t border-sky-400/20 text-[11px] text-sky-400/50 font-black tracking-widest uppercase">
+            <div className="flex justify-between items-center">
+              <span>Security Status</span>
+              <span className="text-emerald-400">● Encrypted</span>
+            </div>
+            <p className="mt-4 uppercase tracking-[0.2em]">Authorized Personnel Only</p>
+          </div>
         </div>
       </div>
     </div>

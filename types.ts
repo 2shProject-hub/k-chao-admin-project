@@ -80,6 +80,44 @@ export interface LearningHistoryItem {
   activityTitle?: string;
   progressRate: number;
   studyTimeMinutes: number;
+  reportId?: string; // 상세 리포트 정보가 있을 경우의 ID
+}
+
+export interface PronunciationScore {
+  total: number;
+  accuracy: number;
+  fluency: number;
+  completeness: number;
+}
+
+export interface CorrectedConversation {
+  id: string;
+  originalText: string;
+  correctedText: string;
+  explanation: string;
+}
+
+export interface TeacherFeedback {
+  strengths: string;
+  improvements: string;
+}
+
+export interface LearningReport {
+  id: string;
+  learningHistoryId: string;
+  studyDate: string;
+  courseTitle: string;
+  lessonTitle: string;
+  studyTimeMinutes: number;
+  todayExpressions: string[];
+  pronunciationScore: PronunciationScore;
+  aiConversations: CorrectedConversation[];
+  teacherFeedback: TeacherFeedback;
+  quizResult: {
+    correctCounts: number;
+    totalCounts: number;
+  };
+  adminMemo?: string;
 }
 
 export interface Coupon {
