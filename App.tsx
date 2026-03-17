@@ -20,7 +20,6 @@ import CouponManagement from './components/CouponManagement';
 import GiftCardManagement from './components/GiftCardManagement';
 import RewardStatus from './components/RewardStatus';
 import RewardManagement from './components/RewardManagement';
-import RewardPolicyManagement from './components/RewardPolicyManagement';
 import FAQManagement from './components/FAQManagement';
 import AppVersionManagement from './components/AppVersionManagement';
 import TermsManagement from './components/TermsManagement';
@@ -237,7 +236,6 @@ const App: React.FC = () => {
             <Route path="/push" element={<PushManagement />} />
             <Route path="/rewards/status" element={<RewardStatus />} />
             <Route path="/rewards/manage" element={<RewardManagement />} />
-            <Route path="/rewards/policy" element={<RewardPolicyManagement />} />
             <Route path="/boards/inquiries" element={<InquiryManagement />} />
             <Route path="/boards/faq" element={<FAQManagement />} />
             <Route path="/boards/terms" element={<TermsManagement />} />

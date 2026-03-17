@@ -45,7 +45,6 @@ export const NAVIGATION: MenuItem[] = [
     id: 'reward', label: '보상 관리', icon: 'Zap', children: [
       { id: 'rew-status', label: '보상 현황', path: '/rewards/status' },
       { id: 'rew-manage', label: '보상 관리', path: '/rewards/manage' },
-      { id: 'rew-policy', label: '재화 정책 관리', path: '/rewards/policy' },
     ]
   },
   {

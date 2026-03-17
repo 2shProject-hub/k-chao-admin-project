@@ -217,6 +217,7 @@ export type RewardCategory = string;
 
 export interface RewardItem {
   id: string;
+  code: string;        // API 연동용 코드
   category: RewardCategory;
   name: string;        // 보상 내용 (활동 명)
   description?: string; // 상세 설명

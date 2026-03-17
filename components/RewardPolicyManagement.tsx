@@ -1,232 +1,347 @@
-import React, { useState } from 'react';
-import { Save, Info, RefreshCcw, CheckCircle2, Zap } from 'lucide-react';
+import React, { useState, useMemo } from 'react';
+import DataList from './DataList';
+import { X, Zap, Info, Settings } from 'lucide-react';
 
-const MOCK_ACTIVITIES = [
-    { id: 'act-1', program: '한국어 종합 교육 프로그램', course: '초급 1', lesson: '어느 나라 사람이에요?', type: '단어 학습', isRewardEnabled: true, cost: 1 },
-    { id: 'act-2', program: '한국어 종합 교육 프로그램', course: '초급 1', lesson: '어느 나라 사람이에요?', type: '말하기 연습', isRewardEnabled: true, cost: 2 },
-    { id: 'act-3', program: '한국어 종합 교육 프로그램', course: '초급 2', lesson: '주말에 뭐 했어요?', type: '문장 퀴즈', isRewardEnabled: false, cost: 0 },
-    { id: 'act-4', program: '비즈니스 실무 한국어', course: '중급 1', lesson: '전화 응대하기', type: '역할극', isRewardEnabled: true, cost: 3 },
-];
+interface ExpensePolicy {
+    id: string;
+    code: string; // API 연동용 코드
+    category: 'ACTIVITY' | 'AI';
+    name: string; // The specific target, e.g., '한국어 종합 - 초급1 : 어느 나라 사람이에요?'
+    activityType?: string; // Optional: Only for ACTIVITY (e.g. 단어 학습, 말하기 연습)
+    isRewardEnabled: boolean; // Whether points are required
+    cost: number;
+    updatedAt: string;
+}
 
-const MOCK_AI_CONVERSATIONS = [
-    { id: 'ai-1', type: '롤플레잉', theme: '공항 입국심사', isRewardEnabled: true, cost: 2 },
-    { id: 'ai-2', type: '롤플레잉', theme: '카페에서 주문하기', isRewardEnabled: true, cost: 2 },
-    { id: 'ai-3', type: '프리토킹', theme: '주말 계획 이야기하기', isRewardEnabled: false, cost: 0 },
-    { id: 'ai-4', type: '사진 묘사', theme: '한국의 길거리 묘사하기', isRewardEnabled: true, cost: 1 },
+const MOCK_POLICIES: ExpensePolicy[] = [
+    { id: '1', code: 'USE-1A2B3C', category: 'ACTIVITY', name: 'AI대화 시 차감', activityType: '단어 학습', isRewardEnabled: true, cost: 1, updatedAt: '2024-03-01' },
+    { id: '2', code: 'USE-4D5E6F', category: 'ACTIVITY', name: 'AI대화 - 사진설명 진행 시 차감', activityType: '문장 퀴즈', isRewardEnabled: false, cost: 0, updatedAt: '2024-03-10' },
+    { id: '3', code: 'USE-7G8H9I', category: 'AI', name: 'AI대화 - 롤플레잉 진행 시 차감', isRewardEnabled: true, cost: 2, updatedAt: '2024-03-12' },
+    { id: '4', code: 'USE-A1B2C3', category: 'AI', name: 'AI대화 - 자유대화 진행 시 차감', isRewardEnabled: true, cost: 3, updatedAt: '2024-03-15' },
 ];
 
 const RewardPolicyManagement: React.FC = () => {
-    const [activities, setActivities] = useState(MOCK_ACTIVITIES);
-    const [aiConversations, setAiConversations] = useState(MOCK_AI_CONVERSATIONS);
-    const [paidMemberInfiniteAI, setPaidMemberInfiniteAI] = useState(true);
+    const [policies, setPolicies] = useState<ExpensePolicy[]>(MOCK_POLICIES);
+    const [selectedPolicy, setSelectedPolicy] = useState<ExpensePolicy | null>(null);
+    const [isEditing, setIsEditing] = useState(false);
+    const [isCreating, setIsCreating] = useState(false);
 
-    const [isSaving, setIsSaving] = useState(false);
-    const [activeTab, setActiveTab] = useState<'ACTIVITY' | 'AI'>('ACTIVITY');
+    // Filter states
+    const [searchParams, setSearchParams] = useState({ category: 'ALL' });
+    const [appliedParams, setAppliedParams] = useState(searchParams);
+
+    const filteredPolicies = useMemo(() => {
+        return policies.filter(item => {
+            if (appliedParams.category !== 'ALL' && item.category !== appliedParams.category) return false;
+            return true;
+        }).sort((a, b) => a.category.localeCompare(b.category));
+    }, [policies, appliedParams]);
+
+    const handleOpenModal = (item: ExpensePolicy) => {
+        setSelectedPolicy(item);
+        setIsEditing(false);
+        setIsCreating(false);
+    };
+
+    const handleAdd = () => {
+        const newCode = 'USE-' + Math.random().toString(36).substring(2, 8).toUpperCase();
+        setSelectedPolicy({
+            id: Date.now().toString(),
+            code: newCode,
+            category: 'ACTIVITY',
+            name: '',
+            activityType: '',
+            isRewardEnabled: true,
+            cost: 1,
+            updatedAt: new Date().toISOString().split('T')[0]
+        });
+        setIsEditing(true);
+        setIsCreating(true);
+    };
+
+    const handleCloseModal = () => {
+        setSelectedPolicy(null);
+        setIsEditing(false);
+        setIsCreating(false);
+    };
 
     const handleSave = () => {
-        setIsSaving(true);
-        setTimeout(() => {
-            setIsSaving(false);
-            alert('재화 정책이 성공적으로 저장되었습니다.');
-        }, 800);
+        if (!selectedPolicy) return;
+
+        // Force reset cost if disabled, or enforce minimum cost if enabled
+        const finalPolicy = {
+            ...selectedPolicy,
+            cost: selectedPolicy.isRewardEnabled ? Math.max(1, selectedPolicy.cost) : 0,
+            updatedAt: new Date().toISOString().split('T')[0]
+        };
+
+        // Enforce logic: Only ACTIVITY can have activityType
+        if (finalPolicy.category !== 'ACTIVITY') {
+            finalPolicy.activityType = undefined;
+        }
+
+        if (isCreating) {
+            setPolicies([...policies, finalPolicy]);
+        } else {
+            setPolicies(policies.map(item => item.id === finalPolicy.id ? finalPolicy : item));
+        }
+        handleCloseModal();
     };
 
-    const toggleActivityStatus = (id: string) => {
-        setActivities(acts => acts.map(a => 
-            a.id === id ? { ...a, isRewardEnabled: !a.isRewardEnabled } : a
-        ));
-    };
-
-    const changeActivityCost = (id: string, cost: number) => {
-        setActivities(acts => acts.map(a => 
-            a.id === id ? { ...a, cost: Math.max(1, cost) } : a
-        ));
-    };
-
-    const toggleAIStatus = (id: string) => {
-        setAiConversations(ais => ais.map(a => 
-            a.id === id ? { ...a, isRewardEnabled: !a.isRewardEnabled } : a
-        ));
-    };
-
-    const changeAICost = (id: string, cost: number) => {
-        setAiConversations(ais => ais.map(a => 
-            a.id === id ? { ...a, cost: Math.max(1, cost) } : a
-        ));
-    };
-
-    return (
-        <div className="space-y-6 max-w-6xl mx-auto p-2">
-            <div className="bg-white p-6 justify-between items-center rounded-2xl shadow-sm border border-slate-100 flex">
-                <div>
-                    <h2 className="text-xl font-black text-slate-800 tracking-tight">재화(번개) 사용 정책 설정</h2>
-                    <p className="text-sm text-slate-500 mt-1 font-medium">서비스 내 특정 학습(Activity)과 AI 대화에 적용할 번개 차감 기준을 상세하게 설정합니다.</p>
-                </div>
-                <button
-                    onClick={handleSave}
-                    disabled={isSaving}
-                    className="flex items-center space-x-2 px-6 py-3 bg-blue-600 text-white rounded-xl font-bold shadow-lg shadow-blue-200 hover:bg-blue-700 transition-all disabled:opacity-50"
+    const columns = [
+        {
+            header: 'No',
+            accessor: (item: ExpensePolicy) => filteredPolicies.indexOf(item) + 1,
+            width: 'w-16 text-center'
+        },
+        {
+            header: '연동 코드',
+            accessor: (item: ExpensePolicy) => (
+                <span className="text-xs font-mono text-slate-500 bg-slate-50 px-2 py-1 rounded">{item.code}</span>
+            ),
+            width: 'w-28 text-center'
+        },
+        {
+            header: '분류',
+            accessor: (item: ExpensePolicy) => (
+                <span className={`inline-flex px-3 py-1 rounded-lg text-xs font-bold ${item.category === 'ACTIVITY' ? 'bg-blue-100 text-blue-700' : 'bg-purple-100 text-purple-700'
+                    }`}>
+                    {item.category === 'ACTIVITY' ? '일반 학습' : 'AI 대화'}
+                </span>
+            ),
+            width: 'w-32 text-center'
+        },
+        {
+            header: '내용(차감)',
+            accessor: (item: ExpensePolicy) => (
+                <div
+                    className="cursor-pointer hover:text-blue-600 font-bold transition-colors"
+                    onClick={() => handleOpenModal(item)}
                 >
-                    <Save size={18} />
-                    <span>{isSaving ? '저장 중...' : '설정 저장'}</span>
-                </button>
-            </div>
-
-            <div className="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden flex flex-col min-h-[500px]">
-                {/* Tabs */}
-                <div className="flex border-b border-slate-100 bg-slate-50/50">
-                    <button
-                        onClick={() => setActiveTab('ACTIVITY')}
-                        className={`flex-1 py-4 text-sm font-bold border-b-2 transition-colors ${activeTab === 'ACTIVITY' ? 'border-blue-500 text-blue-600 bg-white' : 'border-transparent text-slate-500 hover:text-slate-700'}`}
-                    >
-                        Activity (일반 학습) 보상 지정
-                    </button>
-                    <button
-                        onClick={() => setActiveTab('AI')}
-                        className={`flex-1 py-4 text-sm font-bold border-b-2 transition-colors ${activeTab === 'AI' ? 'border-purple-500 text-purple-600 bg-white' : 'border-transparent text-slate-500 hover:text-slate-700'}`}
-                    >
-                        AI 대화 (롤플레잉/프리토킹 등) 보상 지정
-                    </button>
+                    {item.name}
                 </div>
-
-                <div className="p-0 flex-1">
-                    {activeTab === 'ACTIVITY' && (
-                        <div className="animate-in fade-in duration-200">
-                            <div className="p-4 bg-blue-50/50 border-b border-blue-100 flex items-center">
-                                <Info size={16} className="text-blue-500 mr-2" />
-                                <span className="text-sm text-blue-800 font-medium">학습 관리에서 등록된 커리큘럼 기반 모듈 정보입니다. 번개 차감 여부와 차감 개수를 지정할 수 있습니다.</span>
-                            </div>
-                            <table className="min-w-full divide-y divide-slate-100">
-                                <thead className="bg-slate-50">
-                                    <tr>
-                                        <th className="px-6 py-4 text-left text-xs font-bold text-slate-500 uppercase">분류 (강좌 &gt; 코스)</th>
-                                        <th className="px-6 py-4 text-left text-xs font-bold text-slate-500 uppercase">레슨명</th>
-                                        <th className="px-6 py-4 text-center text-xs font-bold text-slate-500 uppercase">학습 활동(Activity) 타입</th>
-                                        <th className="px-6 py-4 text-center text-xs font-bold text-slate-500 uppercase">재화 사용 여부</th>
-                                        <th className="px-6 py-4 text-center text-xs font-bold text-slate-500 uppercase">필요 번개 수량</th>
-                                    </tr>
-                                </thead>
-                                <tbody className="bg-white divide-y divide-slate-50">
-                                    {activities.map(act => (
-                                        <tr key={act.id} className="hover:bg-slate-50/50 transition-colors">
-                                            <td className="px-6 py-4">
-                                                <div className="text-sm font-bold text-slate-800">{act.program}</div>
-                                                <div className="text-xs text-slate-500 mt-0.5">{act.course}</div>
-                                            </td>
-                                            <td className="px-6 py-4 text-sm font-medium text-slate-700">{act.lesson}</td>
-                                            <td className="px-6 py-4 text-center">
-                                                <span className="inline-flex bg-slate-100 text-slate-600 px-3 py-1 rounded-lg text-xs font-bold">{act.type}</span>
-                                            </td>
-                                            <td className="px-6 py-4 text-center">
-                                                <button 
-                                                    onClick={() => toggleActivityStatus(act.id)}
-                                                    className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${act.isRewardEnabled ? 'bg-blue-500' : 'bg-slate-300'}`}
-                                                >
-                                                    <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${act.isRewardEnabled ? 'translate-x-6' : 'translate-x-1'}`} />
-                                                </button>
-                                            </td>
-                                            <td className="px-6 py-4 text-center">
-                                                {act.isRewardEnabled ? (
-                                                    <div className="flex items-center justify-center space-x-2">
-                                                        <Zap size={14} className="text-amber-500" />
-                                                        <input 
-                                                            type="number" 
-                                                            min="1" 
-                                                            value={act.cost} 
-                                                            onChange={(e) => changeActivityCost(act.id, parseInt(e.target.value) || 1)}
-                                                            className="w-16 px-2 py-1 text-center bg-white border border-slate-200 rounded-md text-sm font-bold text-slate-800 focus:border-blue-500 outline-none" 
-                                                        />
-                                                    </div>
-                                                ) : <span className="text-xs font-bold text-slate-400">-</span>}
-                                            </td>
-                                        </tr>
-                                    ))}
-                                </tbody>
-                            </table>
-                        </div>
-                    )}
-
-                    {activeTab === 'AI' && (
-                        <div className="animate-in fade-in duration-200">
-                            <div className="p-4 bg-purple-50/50 border-b border-purple-100 flex items-center justify-between">
-                                <div className="flex items-center">
-                                    <Info size={16} className="text-purple-500 mr-2" />
-                                    <span className="text-sm text-purple-800 font-medium">시스템에 추가된AI 대화 모드별로 재화 차감 정책을 설정할 수 있습니다.</span>
-                                </div>
-                                <label className="flex items-center space-x-2 cursor-pointer bg-white px-3 py-1.5 rounded-lg border border-purple-200 shadow-sm">
-                                    <input 
-                                        type="checkbox" 
-                                        checked={paidMemberInfiniteAI}
-                                        onChange={(e) => setPaidMemberInfiniteAI(e.target.checked)}
-                                        className="w-4 h-4 text-purple-600 rounded border-slate-300 focus:ring-purple-500"
-                                    />
-                                    <span className="text-xs font-bold text-slate-700">유료 회원 무제한 허용 (차감 무시)</span>
-                                </label>
-                            </div>
-                            <table className="min-w-full divide-y divide-slate-100">
-                                <thead className="bg-slate-50">
-                                    <tr>
-                                        <th className="px-6 py-4 text-left text-xs font-bold text-slate-500 uppercase">대화 유형</th>
-                                        <th className="px-6 py-4 text-left text-xs font-bold text-slate-500 uppercase">대화 주제(Theme)</th>
-                                        <th className="px-6 py-4 text-center text-xs font-bold text-slate-500 uppercase">재화 사용 여부</th>
-                                        <th className="px-6 py-4 text-center text-xs font-bold text-slate-500 uppercase">필요 번개 수량</th>
-                                    </tr>
-                                </thead>
-                                <tbody className="bg-white divide-y divide-slate-50">
-                                    {aiConversations.map(ai => (
-                                        <tr key={ai.id} className="hover:bg-slate-50/50 transition-colors">
-                                            <td className="px-6 py-4">
-                                                <span className={`inline-flex px-3 py-1 rounded-lg text-xs font-bold ${
-                                                    ai.type === '롤플레잉' ? 'bg-sky-100 text-sky-700' : 'bg-emerald-100 text-emerald-700'
-                                                }`}>
-                                                    {ai.type}
-                                                </span>
-                                            </td>
-                                            <td className="px-6 py-4 text-sm font-bold text-slate-800">{ai.theme}</td>
-                                            <td className="px-6 py-4 text-center">
-                                                <button 
-                                                    onClick={() => toggleAIStatus(ai.id)}
-                                                    className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${ai.isRewardEnabled ? 'bg-purple-500' : 'bg-slate-300'}`}
-                                                >
-                                                    <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${ai.isRewardEnabled ? 'translate-x-6' : 'translate-x-1'}`} />
-                                                </button>
-                                            </td>
-                                            <td className="px-6 py-4 text-center">
-                                                {ai.isRewardEnabled ? (
-                                                    <div className="flex items-center justify-center space-x-2">
-                                                        <Zap size={14} className="text-amber-500" />
-                                                        <input 
-                                                            type="number" 
-                                                            min="1" 
-                                                            value={ai.cost} 
-                                                            onChange={(e) => changeAICost(ai.id, parseInt(e.target.value) || 1)}
-                                                            className="w-16 px-2 py-1 text-center bg-white border border-slate-200 rounded-md text-sm font-bold text-slate-800 focus:border-purple-500 outline-none" 
-                                                        />
-                                                    </div>
-                                                ) : <span className="text-xs font-bold text-slate-400">-</span>}
-                                            </td>
-                                        </tr>
-                                    ))}
-                                </tbody>
-                            </table>
-                        </div>
-                    )}
+            ),
+            width: 'flex-1'
+        },
+        {
+            header: '활동(Activity) 타입',
+            accessor: (item: ExpensePolicy) => (
+                <span className="text-gray-500 font-medium">
+                    {item.category === 'ACTIVITY' ? (item.activityType || '-') : '-'}
+                </span>
+            ),
+            width: 'w-40 text-center'
+        },
+        {
+            header: '사용 여부',
+            accessor: (item: ExpensePolicy) => item.isRewardEnabled ? (
+                <span className="px-2 py-0.5 bg-green-100 text-green-700 rounded text-xs font-bold">사용</span>
+            ) : (
+                <span className="px-2 py-0.5 bg-gray-100 text-gray-500 rounded text-xs">미사용</span>
+            ),
+            width: 'w-24 text-center'
+        },
+        {
+            header: '차감 수량',
+            accessor: (item: ExpensePolicy) => item.isRewardEnabled ? (
+                <div className="flex items-center justify-center space-x-1 font-bold text-amber-600">
+                    <Zap size={14} />
+                    <span>{item.cost}</span>
                 </div>
-            </div>
+            ) : <span className="text-gray-400">-</span>,
+            width: 'w-24 text-center'
+        },
+        { header: '최근 수정일', accessor: 'updatedAt' as keyof ExpensePolicy, width: 'w-32 text-center' },
+    ];
 
-            
-            <div className="bg-slate-50 p-6 rounded-2xl border border-slate-100">
-                <h4 className="text-sm font-bold text-slate-700 mb-2 flex items-center">
-                    <Info size={16} className="text-blue-500 mr-2" />
-                    안내 사항
-                </h4>
-                <ul className="text-sm text-slate-600 space-y-1 ml-6 list-disc">
-                    <li>해당 설정은 저장 즉시 앱에 연동되어 반영됩니다.</li>
-                    <li>설정 변경 전, 변경되는 정책에 대해 사용자 공지를 권장합니다.</li>
-                    <li>사용 내역은 회원 상세 정보의 <strong>보상 관리(REWARD)</strong> 탭에서 확인할 수 있습니다.</li>
-                </ul>
+    const renderFilter = (
+        <div className="flex border-b border-gray-200 text-xs">
+            <div className="w-32 bg-[#F1F3F6] p-3 font-bold text-center flex items-center justify-center border-r border-gray-200">분류</div>
+            <div className="flex-1 p-2">
+                <select
+                    className="w-48 h-8 px-2 border border-gray-300 rounded focus:outline-none"
+                    value={searchParams.category}
+                    onChange={e => setSearchParams({ ...searchParams, category: e.target.value })}
+                >
+                    <option value="ALL">전체</option>
+                    <option value="ACTIVITY">일반 학습 (Activity)</option>
+                    <option value="AI">AI 대화</option>
+                </select>
             </div>
         </div>
+    );
+
+    return (
+        <>
+            <DataList
+                title="보상 사용 설정 (차감)"
+                data={filteredPolicies}
+                columns={columns}
+                renderFilter={renderFilter}
+                onAdd={handleAdd}
+                onSearch={() => setAppliedParams(searchParams)}
+                onReset={() => {
+                    setSearchParams({ category: 'ALL' });
+                    setAppliedParams({ category: 'ALL' });
+                }}
+            />
+
+            {selectedPolicy && (
+                <div className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-900/50 backdrop-blur-sm">
+                    <div className="bg-white rounded-2xl shadow-xl w-full max-w-lg overflow-hidden max-h-[90vh] flex flex-col">
+                        <div className="flex justify-between items-center p-5 border-b border-slate-100 bg-white">
+                            <h3 className="text-lg font-black text-slate-800 flex items-center">
+                                <Settings className="mr-2 text-blue-500" size={20} />
+                                {isCreating ? '보상 사용처(차감) 설정 등록' : '차감 설정 상세 정보'}
+                            </h3>
+                            <button onClick={handleCloseModal} className="text-slate-400 hover:text-slate-600 transition-colors">
+                                <X size={24} />
+                            </button>
+                        </div>
+
+                        <div className="p-6 space-y-6 overflow-y-auto">
+                            <div className="flex items-center space-x-2 bg-slate-50 p-3 rounded-xl justify-between border border-slate-100">
+                                <span className="text-sm font-bold text-slate-500">API 연동 코드 (자동 생성)</span>
+                                <span className="text-base font-mono font-black text-slate-800 tracking-wider">{selectedPolicy.code}</span>
+                            </div>
+
+                            <div className="space-y-4">
+                                <div>
+                                    <label className="block text-xs font-bold text-slate-500 mb-1.5">분류</label>
+                                    {isEditing ? (
+                                        <select
+                                            className="w-full p-2.5 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 font-medium"
+                                            value={selectedPolicy.category}
+                                            onChange={e => setSelectedPolicy({ ...selectedPolicy, category: e.target.value as 'ACTIVITY' | 'AI' })}
+                                        >
+                                            <option value="ACTIVITY">일반 학습 (Activity)</option>
+                                            <option value="AI">AI 대화 (롤플레잉/프리토킹 등)</option>
+                                        </select>
+                                    ) : (
+                                        <span className={`inline-flex px-3 py-1 rounded-lg text-sm font-bold ${selectedPolicy.category === 'ACTIVITY' ? 'bg-blue-100 text-blue-700' : 'bg-purple-100 text-purple-700'}`}>
+                                            {selectedPolicy.category === 'ACTIVITY' ? '일반 학습 (Activity)' : 'AI 대화'}
+                                        </span>
+                                    )}
+                                </div>
+
+                                <div>
+                                    <label className="block text-xs font-bold text-slate-500 mb-1.5">설정명 (주제 / 레슨명 등 대상 지정)</label>
+                                    {isEditing ? (
+                                        <input
+                                            type="text"
+                                            className="w-full p-2.5 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 font-bold"
+                                            value={selectedPolicy.name}
+                                            onChange={e => setSelectedPolicy({ ...selectedPolicy, name: e.target.value })}
+                                            placeholder="예: 단어 학습 전체 적용, 또는 특정 레슨명"
+                                        />
+                                    ) : (
+                                        <div className="text-lg font-bold text-slate-800">{selectedPolicy.name}</div>
+                                    )}
+                                </div>
+
+                                {selectedPolicy.category === 'ACTIVITY' && (
+                                    <div className="animate-in fade-in slide-in-from-top-2 duration-300">
+                                        <label className="block text-xs font-bold text-slate-500 mb-1.5">
+                                            학습 활동 (Activity) 타입 제한
+                                        </label>
+                                        {isEditing ? (
+                                            <input
+                                                type="text"
+                                                className="w-full p-2.5 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500"
+                                                value={selectedPolicy.activityType || ''}
+                                                onChange={e => setSelectedPolicy({ ...selectedPolicy, activityType: e.target.value })}
+                                                placeholder="입력 시 해당 타입의 액티비티에만 차감 적용 (예: 단어 학습)"
+                                            />
+                                        ) : (
+                                            <div className="text-sm font-medium text-slate-700 bg-slate-50 p-3 rounded-xl border border-slate-100">
+                                                {selectedPolicy.activityType || <span className="text-slate-400 italic">지정되지 않음 (전체 호환)</span>}
+                                            </div>
+                                        )}
+                                        <p className="text-[11px] text-slate-400 mt-1 pl-1 flex items-center"><Info size={12} className="mr-1 inline" /> 학습에 대한 차감 기능은 특정 학습 활동타입에만 지정하여 동작하게 설정할 수 있습니다.</p>
+                                    </div>
+                                )}
+                            </div>
+
+                            <hr className="border-slate-100" />
+
+                            <div className="grid grid-cols-2 gap-6">
+                                <div className="col-span-2">
+                                    <label className="flex items-center space-x-3 cursor-pointer bg-slate-50 p-4 rounded-xl border border-slate-200 hover:bg-slate-100 transition-colors">
+                                        <input
+                                            type="checkbox"
+                                            className="w-5 h-5 text-blue-600 rounded border-slate-300 focus:ring-blue-500"
+                                            checked={selectedPolicy.isRewardEnabled}
+                                            disabled={!isEditing}
+                                            onChange={e => setSelectedPolicy({ ...selectedPolicy, isRewardEnabled: e.target.checked })}
+                                        />
+                                        <div className="flex flex-col">
+                                            <span className="font-bold text-slate-800 text-sm">재화(번개) 차감 사용 여부</span>
+                                            <span className="text-xs text-slate-500 mt-0.5">체크 해제 시 이용에 재화가 차감되지 않습니다. (무료 적용)</span>
+                                        </div>
+                                    </label>
+                                </div>
+
+                                <div className={`col-span-2 transition-opacity duration-300 ${selectedPolicy.isRewardEnabled ? 'opacity-100' : 'opacity-40 pointer-events-none'}`}>
+                                    <label className="block text-xs font-bold text-slate-500 mb-1.5">필요 수량 (차감량)</label>
+                                    {isEditing ? (
+                                        <div className="flex items-center space-x-2">
+                                            <div className="relative flex-1 max-w-[200px]">
+                                                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                                    <Zap size={16} className="text-amber-500" />
+                                                </div>
+                                                <input
+                                                    type="number"
+                                                    min="1"
+                                                    className="w-full pl-9 pr-4 py-2.5 border border-amber-200 rounded-xl text-left font-black text-amber-700 bg-amber-50/30 focus:bg-white focus:ring-2 focus:ring-amber-500 focus:border-amber-500 outline-none"
+                                                    value={selectedPolicy.cost}
+                                                    onChange={e => setSelectedPolicy({ ...selectedPolicy, cost: parseInt(e.target.value) || 1 })}
+                                                    disabled={!selectedPolicy.isRewardEnabled}
+                                                />
+                                            </div>
+                                            <span className="text-slate-500 font-bold text-sm">개 차감 / 회당</span>
+                                        </div>
+                                    ) : (
+                                        <div className="flex items-center space-x-2 text-xl font-black text-amber-600">
+                                            <Zap size={24} className="text-amber-500" />
+                                            <span>{selectedPolicy.cost} 개</span>
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
+                        </div>
+
+                        <div className="p-4 border-t border-slate-100 bg-slate-50 flex justify-between items-center">
+                            <div className="text-xs text-slate-400 font-medium ml-2">
+                                {!isCreating && `마지막 수정: ${selectedPolicy.updatedAt}`}
+                            </div>
+                            <div className="flex space-x-2">
+                                <button
+                                    onClick={handleCloseModal}
+                                    className="px-5 py-2.5 bg-white border border-slate-200 rounded-xl text-slate-600 hover:bg-slate-50 font-bold text-sm transition-colors"
+                                >
+                                    닫기
+                                </button>
+                                {isEditing ? (
+                                    <button
+                                        onClick={handleSave}
+                                        className="px-6 py-2.5 bg-blue-600 text-white rounded-xl hover:bg-blue-700 font-black text-sm shadow-lg shadow-blue-200 transition-transform active:scale-95"
+                                    >
+                                        {isCreating ? '등록하기' : '저장하기'}
+                                    </button>
+                                ) : (
+                                    <button
+                                        onClick={() => setIsEditing(true)}
+                                        className="px-6 py-2.5 bg-slate-800 text-white rounded-xl hover:bg-slate-900 font-black text-sm shadow-lg shadow-slate-200 transition-transform active:scale-95"
+                                    >
+                                        정보 수정
+                                    </button>
+                                )}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
+        </>
     );
 };
 
