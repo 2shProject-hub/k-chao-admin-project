@@ -110,10 +110,37 @@ export const PAGE_DESCRIPTIONS: Record<string, React.ReactNode> = {
     </div>
   ),
 
-  // 예시: 보상 관리 화면의 Description
-  // '/rewards/policy': (
-  //   <div className="space-y-8">
-  //     <section className="space-y-4">...
-  //   </div>
-  // )
+  '/rewards/manage': (
+    <div className="space-y-8">
+      <section className="space-y-4">
+        <h3 className="text-sm font-black text-slate-800 flex items-center bg-white/60 inline-flex px-2 py-1 rounded">
+          보상 관리
+        </h3>
+        <ul className="text-xs text-slate-700 space-y-3 font-semibold tracking-tight">
+          <li className="flex items-start">
+            <span className="mr-2 text-blue-500 font-black">-</span>
+            <span className="leading-relaxed font-medium">보상은 획득 및 차감으로 구분</span>
+          </li>
+          <li className="flex flex-col items-start space-y-1">
+            <div className="flex">
+              <span className="mr-2 text-blue-500 font-black">-</span>
+              <span className="leading-relaxed font-bold">admin에 등록된 정보로 보상 획득 및 차감 처리</span>
+            </div>
+          </li>
+          <li className="flex flex-col items-start space-y-1">
+            <div className="flex">
+              <span className="mr-2 text-blue-500 font-black">-</span>
+              <span className="leading-relaxed font-bold">차감은 AI를 사용하는 활동에만 제공</span>
+            </div>
+            <ul className="pl-4 space-y-1.5 mt-1 text-slate-500">
+              <li className="flex items-start">
+                <span className="w-1 h-1 rounded-full bg-slate-400 mr-2 mt-1.5"></span>
+                <span className="leading-relaxed text-xs">예를 들어 AI대화 학습, AI대화 코너의 항목 등에 사용</span>
+              </li>
+            </ul>
+          </li>
+        </ul>
+      </section>
+    </div>
+  ),
 };

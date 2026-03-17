@@ -7,15 +7,14 @@ interface ExpensePolicy {
     code: string; // API 연동용 코드
     category: 'ACTIVITY' | 'AI';
     name: string; // The specific target, e.g., '한국어 종합 - 초급1 : 어느 나라 사람이에요?'
-    activityType?: string; // Optional: Only for ACTIVITY (e.g. 단어 학습, 말하기 연습)
     isRewardEnabled: boolean; // Whether points are required
     cost: number;
     updatedAt: string;
 }
 
 const MOCK_POLICIES: ExpensePolicy[] = [
-    { id: '1', code: 'USE-1A2B3C', category: 'ACTIVITY', name: 'AI대화 시 차감', activityType: '단어 학습', isRewardEnabled: true, cost: 1, updatedAt: '2024-03-01' },
-    { id: '2', code: 'USE-4D5E6F', category: 'ACTIVITY', name: 'AI대화 - 사진설명 진행 시 차감', activityType: '문장 퀴즈', isRewardEnabled: false, cost: 0, updatedAt: '2024-03-10' },
+    { id: '1', code: 'USE-1A2B3C', category: 'ACTIVITY', name: 'AI대화 시 차감', isRewardEnabled: true, cost: 1, updatedAt: '2024-03-01' },
+    { id: '2', code: 'USE-4D5E6F', category: 'ACTIVITY', name: 'AI대화 - 사진설명 진행 시 차감', isRewardEnabled: false, cost: 0, updatedAt: '2024-03-10' },
     { id: '3', code: 'USE-7G8H9I', category: 'AI', name: 'AI대화 - 롤플레잉 진행 시 차감', isRewardEnabled: true, cost: 2, updatedAt: '2024-03-12' },
     { id: '4', code: 'USE-A1B2C3', category: 'AI', name: 'AI대화 - 자유대화 진행 시 차감', isRewardEnabled: true, cost: 3, updatedAt: '2024-03-15' },
 ];
@@ -50,7 +49,6 @@ const RewardPolicyManagement: React.FC = () => {
             code: newCode,
             category: 'ACTIVITY',
             name: '',
-            activityType: '',
             isRewardEnabled: true,
             cost: 1,
             updatedAt: new Date().toISOString().split('T')[0]
@@ -74,11 +72,6 @@ const RewardPolicyManagement: React.FC = () => {
             cost: selectedPolicy.isRewardEnabled ? Math.max(1, selectedPolicy.cost) : 0,
             updatedAt: new Date().toISOString().split('T')[0]
         };
-
-        // Enforce logic: Only ACTIVITY can have activityType
-        if (finalPolicy.category !== 'ACTIVITY') {
-            finalPolicy.activityType = undefined;
-        }
 
         if (isCreating) {
             setPolicies([...policies, finalPolicy]);
@@ -122,15 +115,6 @@ const RewardPolicyManagement: React.FC = () => {
                 </div>
             ),
             width: 'flex-1'
-        },
-        {
-            header: '활동(Activity) 타입',
-            accessor: (item: ExpensePolicy) => (
-                <span className="text-gray-500 font-medium">
-                    {item.category === 'ACTIVITY' ? (item.activityType || '-') : '-'}
-                </span>
-            ),
-            width: 'w-40 text-center'
         },
         {
             header: '사용 여부',
@@ -238,28 +222,6 @@ const RewardPolicyManagement: React.FC = () => {
                                         <div className="text-lg font-bold text-slate-800">{selectedPolicy.name}</div>
                                     )}
                                 </div>
-
-                                {selectedPolicy.category === 'ACTIVITY' && (
-                                    <div className="animate-in fade-in slide-in-from-top-2 duration-300">
-                                        <label className="block text-xs font-bold text-slate-500 mb-1.5">
-                                            학습 활동 (Activity) 타입 제한
-                                        </label>
-                                        {isEditing ? (
-                                            <input
-                                                type="text"
-                                                className="w-full p-2.5 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500"
-                                                value={selectedPolicy.activityType || ''}
-                                                onChange={e => setSelectedPolicy({ ...selectedPolicy, activityType: e.target.value })}
-                                                placeholder="입력 시 해당 타입의 액티비티에만 차감 적용 (예: 단어 학습)"
-                                            />
-                                        ) : (
-                                            <div className="text-sm font-medium text-slate-700 bg-slate-50 p-3 rounded-xl border border-slate-100">
-                                                {selectedPolicy.activityType || <span className="text-slate-400 italic">지정되지 않음 (전체 호환)</span>}
-                                            </div>
-                                        )}
-                                        <p className="text-[11px] text-slate-400 mt-1 pl-1 flex items-center"><Info size={12} className="mr-1 inline" /> 학습에 대한 차감 기능은 특정 학습 활동타입에만 지정하여 동작하게 설정할 수 있습니다.</p>
-                                    </div>
-                                )}
                             </div>
 
                             <hr className="border-slate-100" />
