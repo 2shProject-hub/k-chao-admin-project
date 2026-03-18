@@ -17,6 +17,8 @@ const MOCK_ADMINS: AdminAccount[] = [
     registeredAt: '2024.01.01',
     modifier: '',
     modifiedAt: '',
+    passwordChanged: true,
+    accountStatus: 'ACTIVE',
     permissions: [] // Empty means all? Or none? Let's assume 'SUPER' group implies all, but we can override.
   },
   {
@@ -29,6 +31,8 @@ const MOCK_ADMINS: AdminAccount[] = [
     registeredAt: '2024.01.10',
     modifier: '',
     modifiedAt: '',
+    passwordChanged: true,
+    accountStatus: 'ACTIVE',
     permissions: ['dashboard', 'members', 'member-status', 'module-activity-manage', 'learn-structure'] // Updated permissions
   }
 ];

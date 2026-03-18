@@ -30,6 +30,10 @@ import SettlementManagement from './components/SettlementManagement';
 import TeacherManagement from './components/TeacherManagement';
 import StudentAssignment from './components/StudentAssignment';
 import StudyGroupManagement from './components/StudyGroupManagement';
+import AIRoleplayManagement from './components/ai/AIRoleplayManagement';
+import AIPhotoManagement from './components/ai/AIPhotoManagement';
+import AIFreeTalkManagement from './components/ai/AIFreeTalkManagement';
+import AIMissionManagement from './components/ai/AIMissionManagement';
 
 const LoginPage: React.FC<{ onLogin: () => void }> = ({ onLogin }) => {
   const [id, setId] = useState('');
@@ -229,8 +233,15 @@ const App: React.FC = () => {
             <Route path="/learning/teachers" element={<TeacherManagement />} />
             <Route path="/learning/students" element={<StudentAssignment />} />
             <Route path="/learning/contents" element={<ContentManagement />} />
-            <Route path="/learning/templates" element={<TemplateManagement />} />
-            <Route path="/finance/settlement" element={<SettlementManagement />} />
+          <Route path="/learning/templates" element={<TemplateManagement />} />
+          
+          {/* AI Learning */}
+          <Route path="/ai/mission" element={<AIMissionManagement />} />
+          <Route path="/ai/roleplay" element={<AIRoleplayManagement />} />
+          <Route path="/ai/photo" element={<AIPhotoManagement />} />
+          <Route path="/ai/freetalk" element={<AIFreeTalkManagement />} />
+
+          <Route path="/finance/settlement" element={<SettlementManagement />} />
             <Route path="/finance/coupons" element={<CouponManagement />} />
             <Route path="/finance/giftcards" element={<GiftCardManagement />} />
             <Route path="/push" element={<PushManagement />} />

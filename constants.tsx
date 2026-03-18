@@ -3,7 +3,7 @@ import {
   Users, LayoutDashboard, BookOpen,
   UserSquare2, CreditCard, Bell, Zap,
   MessageSquare, Settings, BarChart3, UserCheck, Layers, List, Box, FolderOpen,
-  Flame, Star, Gift, Crown, Trophy, Coins, Diamond
+  Flame, Star, Gift, Crown, Trophy, Coins, Diamond, Sparkles
 } from 'lucide-react';
 import { MenuItem } from './types';
 
@@ -30,6 +30,14 @@ export const NAVIGATION: MenuItem[] = [
       { id: 'learn-program', label: '강좌 관리', path: '/learning/programs' },
       { id: 'learn-contents', label: '콘텐츠 관리', path: '/learning/contents' },
       { id: 'learn-template', label: '템플릿 관리', path: '/learning/templates' },
+    ]
+  },
+  {
+    id: 'ai-learning', label: 'AI 학습 관리', icon: 'Sparkles', children: [
+      { id: 'ai-mission', label: 'AI 대화 미션 관리', path: '/ai/mission' },
+      { id: 'ai-roleplay', label: 'AI 롤플레잉 관리', path: '/ai/roleplay' },
+      { id: 'ai-photo', label: 'AI 사진 설명 관리', path: '/ai/photo' },
+      { id: 'ai-freetalk', label: '자유 대화 설정 관리', path: '/ai/freetalk' },
     ]
   },
 
@@ -65,6 +73,7 @@ export const NAVIGATION: MenuItem[] = [
       { id: 'per-account', label: '어드민 계정 설정', path: '/personal/account' },
     ]
   },
+
   {
     id: 'system', label: '시스템 설정', icon: 'Settings', children: [
       { id: 'sys-permission', label: '관리자 권한 관리', path: '/system/permissions' },
@@ -80,7 +89,7 @@ export const ICON_MAP: Record<string, any> = {
   LayoutDashboard, Users, BookOpen,
   UserSquare2, CreditCard, Bell, Zap,
   MessageSquare, Settings, BarChart3, UserCheck, Layers, List, Box, FolderOpen,
-  Flame, Star, Gift, Crown, Trophy, Coins, Diamond
+  Flame, Star, Gift, Crown, Trophy, Coins, Diamond, Sparkles
 };
 
 export const ROLE_PERMISSIONS: Record<string, string[]> = {
